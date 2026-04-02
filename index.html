@@ -1,0 +1,176 @@
+<head>
+    <meta charset="UTF-8">
+    <title>نظام مطابقة بيور العلمي - الإصدار المطور</title>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
+
+    <style>
+        body { font-family: 'Cairo', sans-serif; background-color: #f8fafc; }
+        .bill-card { display: flex; flex-direction: column; padding: 12px 18px; background: white; border-radius: 15px; border: 1px solid #e2e8f0; margin-bottom: 8px; position: relative; transition: 0.3s; }
+@@ -17,6 +23,11 @@
+        .arrow-rotate { transition: transform 0.3s ease; }
+        .collapsed .arrow-rotate { transform: rotate(180deg); }
+
+        /* ستايل شاشة التحميل المضافة */
+        #loaderOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.9); z-index: 9999; justify-content: center; align-items: center; flex-direction: column; color: white; }
+        .spinner { border: 4px solid rgba(255,255,255,0.3); border-top: 4px solid #10b981; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin-bottom: 1rem; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        @media print { 
+            @page { size: A4; margin: 8mm; }
+            .no-print { display: none !important; } 
+@@ -27,6 +38,12 @@
+</head>
+<body class="p-4" onload="initApp()">
+
+    <div id="loaderOverlay" class="no-print">
+        <div class="spinner mb-4"></div>
+        <h2 class="text-xl font-black text-emerald-400" id="loaderText">جاري معالجة الملف واستخراج الفواتير...</h2>
+        <p class="text-xs text-slate-300 mt-2">يرجى الانتظار، قد يستغرق الأمر ثواني معدودة</p>
+    </div>
+
+    <div class="max-w-5xl mx-auto">
+        <header class="no-print bg-[#1e293b] text-white p-8 rounded-[2.5rem] mb-8 shadow-2xl border-b-4 border-indigo-500">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-6">
+@@ -54,11 +71,13 @@
+            </div>
+
+            <div class="flex gap-4">
+                <button onclick="document.getElementById('pdfFile').click()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 p-4 rounded-2xl text-xs font-black uppercase tracking-widest transition-all">رفع كشف الحساب PDF</button>
+                <button onclick="document.getElementById('pdfFile').click()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 p-4 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all">رفع PDF</button>
+                <button onclick="document.getElementById('multiFile').click()" class="flex-1 bg-sky-600 hover:bg-sky-700 p-4 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all border border-sky-400">رفع Excel/Word/صور</button>
+                <button onclick="window.print()" class="flex-[2] bg-emerald-600 hover:bg-emerald-700 p-4 rounded-2xl text-xs font-black uppercase tracking-widest transition-all">إصدار وطباعة التقرير النهائي</button>
+                <button onclick="location.reload()" class="bg-red-900/40 hover:bg-red-900/60 px-6 rounded-2xl text-[10px] font-bold text-red-400">تصفير</button>
+            </div>
+            <input type="file" id="pdfFile" class="hidden" accept=".pdf">
+            <input type="file" id="multiFile" class="hidden" accept=".xlsx, .xls, .docx, image/png, image/jpeg, image/jpg">
+        </header>
+
+        <div class="bg-white p-10 rounded-[3rem] report-container min-h-[1000px] flex flex-col border border-slate-200 shadow-sm">
+@@ -191,7 +210,6 @@ <h3 class="text-[11px] font-black text-slate-400 uppercase italic tracking-wides
+            const d = document.getElementById('matchDateInput').value;
+            document.getElementById('outDate').innerText = d ? d.split('-').reverse().join('/') : '..';
+
+            // مزامنة تاريخ آخر مطابقة 
+            const ld = document.getElementById('lastMatchInput').value;
+            document.getElementById('outLastMatch').innerText = ld ? ld.split('-').reverse().join('/') : '..';
+
+@@ -275,6 +293,112 @@ <h3 class="text-[11px] font-black text-slate-400 uppercase italic tracking-wides
+        function updateNote(i, val) { db[i].note = val; calculate(); }
+        function toggleStatus(i) { db[i].status = (db[i].status === 'ok' ? 'none' : 'ok'); renderList(); }
+        function showNote(i) { document.getElementById(`note-${i}`).classList.toggle('hidden'); }
+
+        // ==============================================
+        // --- إضافات معالجة الملفات الجديدة ---
+        // ==============================================
+
+        const loader = document.getElementById('loaderOverlay');
+        const loaderText = document.getElementById('loaderText');
+
+        function showLoader(text) {
+            loaderText.innerText = text || "جاري معالجة الملف...";
+            loader.style.display = "flex";
+        }
+        function hideLoader() { loader.style.display = "none"; }
+
+        document.getElementById('multiFile').onchange = async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            showLoader(`جاري قراءة ملف: ${file.name}`);
+            db = []; // تصفير القاعدة لضمان عدم تداخل الفواتير
+
+            try {
+                const ext = file.name.split('.').pop().toLowerCase();
+
+                if (ext === 'xlsx' || ext === 'xls') {
+                    await processExcel(file);
+                } else if (ext === 'docx') {
+                    await processWord(file);
+                } else if (['png', 'jpg', 'jpeg'].includes(ext)) {
+                    await processImage(file);
+                } else {
+                    alert("صيغة الملف غير مدعومة من هذا الزر.");
+                }
+            } catch (error) {
+                console.error("خطأ أثناء المعالجة:", error);
+                alert("حدث خطأ أثناء معالجة الملف.");
+            } finally {
+                hideLoader();
+                renderList();
+            }
+        };
+
+        async function processExcel(file) {
+            const data = await file.arrayBuffer();
+            const workbook = XLSX.read(data, { type: 'array' });
+            const firstSheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[firstSheetName];
+            const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+            
+            json.forEach(row => {
+                if (row.length >= 4) {
+                    let dateStr = row.find(cell => typeof cell === 'string' && /\d{2}\/\d{2}\/\d{4}/.test(cell));
+                    let nums = row.filter(cell => typeof cell === 'number' || (typeof cell === 'string' && /[\d,]+\.\d{2}/.test(cell)));
+                    
+                    if (dateStr && nums.length >= 2) {
+                        let id = row[0] || "000"; 
+                        db.push({ 
+                            id: String(id), 
+                            date: dateStr, 
+                            total: String(nums[0]), 
+                            paid: String(nums.length >= 3 ? nums[1] : "0.00"), 
+                            remain: String(nums[nums.length - 1]), 
+                            status: 'ok', 
+                            note: '' 
+                        });
+                    }
+                }
+            });
+        }
+
+        async function processWord(file) {
+            const arrayBuffer = await file.arrayBuffer();
+            const result = await mammoth.extractRawText({ arrayBuffer: arrayBuffer });
+            parseRawText(result.value);
+        }
+
+        async function processImage(file) {
+            showLoader("جاري استخراج النصوص من الصورة (OCR)...");
+            const worker = await Tesseract.createWorker('ara+eng');
+            const { data: { text } } = await worker.recognize(file);
+            await worker.terminate();
+            parseRawText(text);
+        }
+
+        function parseRawText(text) {
+            const lines = text.split('\n');
+            lines.forEach(line => {
+                if (/\d{2}\/\d{2}\/\d{4}/.test(line)) {
+                    const dateMatch = line.match(/\d{2}\/\d{2}\/\d{4}/)[0];
+                    const nums = line.match(/[\d,]+\.\d{2}|\d+(?:,\d{3})*(?:\.\d+)?/g) || [];
+                    const cleanNums = nums.filter(n => n !== dateMatch && n.length > 3);
+
+                    if (cleanNums.length >= 2) {
+                        db.push({ 
+                            id: Math.floor(10000 + Math.random() * 90000).toString(), 
+                            date: dateMatch, 
+                            total: cleanNums[0], 
+                            paid: cleanNums.length >= 3 ? cleanNums[1] : "0.00", 
+                            remain: cleanNums[cleanNums.length - 1], 
+                            status: 'ok', 
+                            note: 'مستخرج نصياً' 
+                        });
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>

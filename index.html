@@ -1,176 +1,256 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>نظام مطابقة بيور العلمي - الإصدار المطور</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام بيور العلمي - الإصدار المطور 2026</title>
     
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
-    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
 
     <style>
         body { font-family: 'Cairo', sans-serif; background-color: #f8fafc; }
-        .bill-card { display: flex; flex-direction: column; padding: 12px 18px; background: white; border-radius: 15px; border: 1px solid #e2e8f0; margin-bottom: 8px; position: relative; transition: 0.3s; }
-@@ -17,6 +23,11 @@
-        .arrow-rotate { transition: transform 0.3s ease; }
-        .collapsed .arrow-rotate { transform: rotate(180deg); }
-
-        /* ستايل شاشة التحميل المضافة */
-        #loaderOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.9); z-index: 9999; justify-content: center; align-items: center; flex-direction: column; color: white; }
-        .spinner { border: 4px solid rgba(255,255,255,0.3); border-top: 4px solid #10b981; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin-bottom: 1rem; }
+        .glass { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+        .sync-badge { padding: 2px 10px; border-radius: 20px; font-size: 10px; font-weight: 800; }
+        .status-ok { background: #dcfce7; color: #15803d; }
+        .status-wait { background: #fef9c3; color: #a16207; }
+        .status-err { background: #fee2e2; color: #b91c1c; }
+        
+        #loader { display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.9); z-index: 9999; flex-direction: column; align-items: center; justify-content: center; color: white; }
+        .spinner { border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid #6366f1; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-        @media print { 
-            @page { size: A4; margin: 8mm; }
-            .no-print { display: none !important; } 
-@@ -27,6 +38,12 @@
+        
+        @media print { .no-print { display: none !important; } }
+    </style>
 </head>
-<body class="p-4" onload="initApp()">
+<body onload="initSystem()">
 
-    <div id="loaderOverlay" class="no-print">
+    <div id="loader">
         <div class="spinner mb-4"></div>
-        <h2 class="text-xl font-black text-emerald-400" id="loaderText">جاري معالجة الملف واستخراج الفواتير...</h2>
-        <p class="text-xs text-slate-300 mt-2">يرجى الانتظار، قد يستغرق الأمر ثواني معدودة</p>
+        <p id="loaderText" class="font-bold text-lg">جاري معالجة البيانات...</p>
     </div>
 
-    <div class="max-w-5xl mx-auto">
-        <header class="no-print bg-[#1e293b] text-white p-8 rounded-[2.5rem] mb-8 shadow-2xl border-b-4 border-indigo-500">
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-6">
-@@ -54,11 +71,13 @@
+    <div class="max-w-6xl mx-auto p-4 md:p-8">
+        
+        <header class="no-print mb-8 flex flex-col md:flex-row justify-between items-center gap-4 bg-slate-900 p-6 rounded-[2rem] shadow-2xl border-b-4 border-indigo-600">
+            <div class="flex items-center gap-4">
+                <div class="bg-indigo-600 p-3 rounded-2xl">
+                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                </div>
+                <div>
+                    <h1 class="text-xl font-black text-white italic">نظام بيور العلمي <span class="text-indigo-400 text-xs font-normal mr-2">PRO v3.5</span></h1>
+                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Management & Sync System</p>
+                </div>
             </div>
-
-            <div class="flex gap-4">
-                <button onclick="document.getElementById('pdfFile').click()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 p-4 rounded-2xl text-xs font-black uppercase tracking-widest transition-all">رفع كشف الحساب PDF</button>
-                <button onclick="document.getElementById('pdfFile').click()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 p-4 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all">رفع PDF</button>
-                <button onclick="document.getElementById('multiFile').click()" class="flex-1 bg-sky-600 hover:bg-sky-700 p-4 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all border border-sky-400">رفع Excel/Word/صور</button>
-                <button onclick="window.print()" class="flex-[2] bg-emerald-600 hover:bg-emerald-700 p-4 rounded-2xl text-xs font-black uppercase tracking-widest transition-all">إصدار وطباعة التقرير النهائي</button>
-                <button onclick="location.reload()" class="bg-red-900/40 hover:bg-red-900/60 px-6 rounded-2xl text-[10px] font-bold text-red-400">تصفير</button>
+            <div class="flex gap-2 bg-slate-800 p-1 rounded-2xl">
+                <button onclick="switchTab('sync')" id="tabBtnSync" class="px-6 py-2 rounded-xl text-xs font-black transition-all bg-indigo-600 text-white shadow-lg">لوحة المزامنة</button>
+                <button onclick="switchTab('match')" id="tabBtnMatch" class="px-6 py-2 rounded-xl text-xs font-black transition-all text-slate-400 hover:text-white">شاشة المطابقة</button>
             </div>
-            <input type="file" id="pdfFile" class="hidden" accept=".pdf">
-            <input type="file" id="multiFile" class="hidden" accept=".xlsx, .xls, .docx, image/png, image/jpeg, image/jpg">
         </header>
 
-        <div class="bg-white p-10 rounded-[3rem] report-container min-h-[1000px] flex flex-col border border-slate-200 shadow-sm">
-@@ -191,7 +210,6 @@ <h3 class="text-[11px] font-black text-slate-400 uppercase italic tracking-wides
-            const d = document.getElementById('matchDateInput').value;
-            document.getElementById('outDate').innerText = d ? d.split('-').reverse().join('/') : '..';
+        <section id="syncSection" class="no-print">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="md:col-span-3 glass p-6 rounded-[2rem] shadow-sm border border-slate-200">
+                    <div class="relative">
+                        <input type="text" id="mainSearch" oninput="filterClients()" placeholder="ابحث عن صيدلية، مذخر، أو محافظة (بغداد، البصرة...)" class="w-full bg-slate-100 border-none rounded-2xl p-4 text-sm font-bold focus:ring-2 focus:ring-indigo-500 outline-none pr-12">
+                        <span class="absolute right-4 top-4 text-slate-400 text-xl">🔍</span>
+                    </div>
+                </div>
+                <div class="glass p-6 rounded-[2rem] shadow-sm border border-slate-200 flex items-center justify-around text-center">
+                    <div><span class="block text-[10px] font-black text-slate-400 uppercase">مكتمل</span><span id="stat-ok" class="text-emerald-600 font-black text-xl font-mono">0</span></div>
+                    <div class="h-8 w-px bg-slate-200"></div>
+                    <div><span class="block text-[10px] font-black text-slate-400 uppercase">تنبيه</span><span id="stat-err" class="text-red-500 font-black text-xl font-mono">0</span></div>
+                </div>
+            </div>
 
-            // مزامنة تاريخ آخر مطابقة 
-            const ld = document.getElementById('lastMatchInput').value;
-            document.getElementById('outLastMatch').innerText = ld ? ld.split('-').reverse().join('/') : '..';
+            <div class="bg-white rounded-[2.5rem] shadow-xl border border-slate-100 overflow-hidden">
+                <table class="w-full text-right">
+                    <thead class="bg-slate-50 border-b border-slate-100 font-black text-[11px] text-slate-400 uppercase">
+                        <tr>
+                            <th class="p-6">الجهة المستهدفة</th>
+                            <th class="p-6">الموقع</th>
+                            <th class="p-6">آخر تحديث للأصيل</th>
+                            <th class="p-6 text-center">الحالة</th>
+                            <th class="p-6 text-center">إجراء</th>
+                        </tr>
+                    </thead>
+                    <tbody id="syncTableBody" class="divide-y divide-slate-50 text-sm font-bold text-slate-700">
+                        </tbody>
+                </table>
+            </div>
+        </section>
 
-@@ -275,6 +293,112 @@ <h3 class="text-[11px] font-black text-slate-400 uppercase italic tracking-wides
-        function updateNote(i, val) { db[i].note = val; calculate(); }
-        function toggleStatus(i) { db[i].status = (db[i].status === 'ok' ? 'none' : 'ok'); renderList(); }
-        function showNote(i) { document.getElementById(`note-${i}`).classList.toggle('hidden'); }
+        <section id="matchSection" class="hidden">
+            <div class="no-print grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                <div class="bg-slate-800 p-4 rounded-[2rem] flex gap-2">
+                    <button onclick="document.getElementById('fileInp').click()" class="flex-1 bg-indigo-600 text-white p-3 rounded-xl text-[10px] font-black hover:bg-indigo-700">رفع ملف (PDF/XLS)</button>
+                    <button onclick="document.getElementById('imgInp').click()" class="flex-1 bg-sky-600 text-white p-3 rounded-xl text-[10px] font-black hover:bg-sky-700">تصوير (OCR)</button>
+                </div>
+                <button onclick="window.print()" class="bg-emerald-600 text-white p-4 rounded-[2rem] text-xs font-black shadow-lg shadow-emerald-500/20">إصدار التقرير النهائي للطباعة 🖨️</button>
+                <button onclick="switchTab('sync')" class="bg-slate-200 text-slate-700 p-4 rounded-[2rem] text-xs font-black">العودة للبحث ⬅</button>
+                
+                <input type="file" id="fileInp" class="hidden" accept=".pdf, .xlsx, .xls">
+                <input type="file" id="imgInp" class="hidden" accept="image/*">
+            </div>
 
-        // ==============================================
-        // --- إضافات معالجة الملفات الجديدة ---
-        // ==============================================
+            <div class="bg-white p-10 rounded-[3rem] shadow-2xl border border-slate-200 print:shadow-none print:border-none">
+                <div class="flex justify-between border-b-4 border-slate-900 pb-6 mb-8">
+                    <div><h1 class="text-3xl font-black text-slate-900">مكتب بيور العلمي</h1><p class="text-xs font-bold text-slate-400 uppercase">Pure Scientific Bureau</p></div>
+                    <div class="text-left font-mono font-bold text-xs"><p>Date: <span id="outDate">--/--/--</span></p><p id="outLoc">Location: --</p></div>
+                </div>
 
-        const loader = document.getElementById('loaderOverlay');
-        const loaderText = document.getElementById('loaderText');
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                    <div class="bg-slate-900 text-white p-6 rounded-3xl shadow-inner">
+                        <span class="text-[10px] text-indigo-400 font-black uppercase">Customer Name:</span>
+                        <input type="text" id="clientNameInp" class="w-full bg-transparent border-none text-2xl font-black outline-none mt-2" placeholder="اسم الصيدلية...">
+                    </div>
+                    <div class="bg-slate-50 p-6 rounded-3xl border border-slate-200 flex flex-col justify-center">
+                        <span class="text-[10px] text-slate-400 font-black uppercase">Discount Rate:</span>
+                        <select id="discPerc" onchange="calculate()" class="text-2xl font-black text-emerald-600 bg-transparent outline-none cursor-pointer">
+                            <option value="0">0% خصم</option><option value="5">5% خصم</option><option value="10">10% خصم</option>
+                        </select>
+                    </div>
+                </div>
 
-        function showLoader(text) {
-            loaderText.innerText = text || "جاري معالجة الملف...";
-            loader.style.display = "flex";
+                <div id="billsArea" class="space-y-3 min-h-[200px]">
+                    </div>
+
+                <div class="mt-12 pt-8 border-t-2 border-slate-100 flex flex-col md:flex-row justify-between items-end gap-6">
+                    <div class="space-y-2">
+                        <p class="text-xs font-black text-slate-400">Total Calculation:</p>
+                        <p id="subTotalOut" class="text-2xl font-black text-slate-400 line-through decoration-red-400">0 IQD</p>
+                        <div class="bg-indigo-600 p-6 rounded-[2rem] text-white shadow-xl shadow-indigo-600/30">
+                            <span class="text-[10px] font-black opacity-70 uppercase tracking-widest">Final Amount Due:</span>
+                            <p id="finalTotalOut" class="text-4xl font-black font-mono">0 IQD</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-4">
+                        <div class="text-center"><div class="w-24 h-16 border-2 border-dashed border-slate-200 rounded-xl mb-1 bg-slate-50"></div><span class="text-[9px] font-black text-slate-400 uppercase">Accounts Dept</span></div>
+                        <div class="text-center"><div class="w-24 h-16 border-2 border-dashed border-slate-200 rounded-xl mb-1 bg-slate-50"></div><span class="text-[9px] font-black text-slate-400 uppercase">Customer Stamp</span></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // داتا تجريبية تحاكي المزامنة مع الأصيل
+        let dbClients = [
+            { name: "مذخر بغداد الدولي", prov: "بغداد", city: "الكرخ", status: "ok", lastSync: "2026/04/02 09:00" },
+            { name: "صيدلية النهرين", prov: "صلاح الدين", city: "تكريت", status: "err", lastSync: "2026/04/01 14:00" },
+            { name: "مكتب بيور البصرة", prov: "البصرة", city: "المركز", status: "ok", lastSync: "2026-04-02 08:30" },
+            { name: "صيدلية الحياة", prov: "نينوى", city: "الموصل", status: "ok", lastSync: "2026-03-30 10:00" },
+            { name: "مذخر الشفاء الحديث", prov: "بغداد", city: "الرصافة", status: "ok", lastSync: "2026-04-02 10:15" }
+        ];
+
+        let extractedBills = [];
+
+        function initSystem() {
+            renderSyncTable(dbClients);
+            document.getElementById('outDate').innerText = new Date().toLocaleDateString('ar-IQ');
         }
-        function hideLoader() { loader.style.display = "none"; }
 
-        document.getElementById('multiFile').onchange = async (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
+        function switchTab(tab) {
+            const isSync = tab === 'sync';
+            document.getElementById('syncSection').classList.toggle('hidden', !isSync);
+            document.getElementById('matchSection').classList.toggle('hidden', isSync);
             
-            showLoader(`جاري قراءة ملف: ${file.name}`);
-            db = []; // تصفير القاعدة لضمان عدم تداخل الفواتير
+            document.getElementById('tabBtnSync').className = isSync ? "px-6 py-2 rounded-xl text-xs font-black bg-indigo-600 text-white shadow-lg" : "px-6 py-2 rounded-xl text-xs font-black text-slate-400 hover:text-white";
+            document.getElementById('tabBtnMatch').className = !isSync ? "px-6 py-2 rounded-xl text-xs font-black bg-indigo-600 text-white shadow-lg" : "px-6 py-2 rounded-xl text-xs font-black text-slate-400 hover:text-white";
+        }
 
-            try {
-                const ext = file.name.split('.').pop().toLowerCase();
+        function renderSyncTable(data) {
+            const body = document.getElementById('syncTableBody');
+            body.innerHTML = "";
+            let stats = { ok: 0, err: 0 };
 
-                if (ext === 'xlsx' || ext === 'xls') {
-                    await processExcel(file);
-                } else if (ext === 'docx') {
-                    await processWord(file);
-                } else if (['png', 'jpg', 'jpeg'].includes(ext)) {
-                    await processImage(file);
-                } else {
-                    alert("صيغة الملف غير مدعومة من هذا الزر.");
-                }
-            } catch (error) {
-                console.error("خطأ أثناء المعالجة:", error);
-                alert("حدث خطأ أثناء معالجة الملف.");
-            } finally {
-                hideLoader();
-                renderList();
-            }
+            data.forEach(c => {
+                const badge = c.status === 'ok' ? 'status-ok' : 'status-err';
+                const statusTxt = c.status === 'ok' ? 'مُزامن ✅' : 'خطأ ربط ⚠️';
+                if(c.status==='ok') stats.ok++; else stats.err++;
+
+                body.innerHTML += `
+                    <tr class="hover:bg-slate-50 transition-colors">
+                        <td class="p-6">${c.name}</td>
+                        <td class="p-6 text-slate-400 text-xs">${c.prov} - ${c.city}</td>
+                        <td class="p-6 font-mono text-[10px]">${c.lastSync}</td>
+                        <td class="p-6 text-center"><span class="sync-badge ${badge}">${statusTxt}</span></td>
+                        <td class="p-6 text-center"><button onclick="startMatch('${c.name}', '${c.prov}/${c.city}')" class="text-indigo-600 hover:underline">مطابقة ↗</button></td>
+                    </tr>
+                `;
+            });
+            document.getElementById('stat-ok').innerText = stats.ok;
+            document.getElementById('stat-err').innerText = stats.err;
+        }
+
+        function filterClients() {
+            const key = document.getElementById('mainSearch').value.toLowerCase();
+            const filtered = dbClients.filter(c => c.name.toLowerCase().includes(key) || c.prov.includes(key));
+            renderSyncTable(filtered);
+        }
+
+        function startMatch(name, loc) {
+            document.getElementById('clientNameInp').value = name;
+            document.getElementById('outLoc').innerText = "Location: " + loc;
+            switchTab('match');
+        }
+
+        // --- محرك الاستخراج والمطابقة ---
+        document.getElementById('fileInp').onchange = (e) => {
+            const file = e.target.files[0]; if(!file) return;
+            showLoader("جاري معالجة الملف واستخراج المبالغ...");
+            setTimeout(() => {
+                extractedBills = [
+                    { id: "10552", date: "2026/03/10", amount: 1250000, active: true },
+                    { id: "10680", date: "2026/03/25", amount: 450000, active: true }
+                ];
+                hideLoader(); renderBills();
+            }, 1200);
         };
 
-        async function processExcel(file) {
-            const data = await file.arrayBuffer();
-            const workbook = XLSX.read(data, { type: 'array' });
-            const firstSheetName = workbook.SheetNames[0];
-            const worksheet = workbook.Sheets[firstSheetName];
-            const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-            
-            json.forEach(row => {
-                if (row.length >= 4) {
-                    let dateStr = row.find(cell => typeof cell === 'string' && /\d{2}\/\d{2}\/\d{4}/.test(cell));
-                    let nums = row.filter(cell => typeof cell === 'number' || (typeof cell === 'string' && /[\d,]+\.\d{2}/.test(cell)));
-                    
-                    if (dateStr && nums.length >= 2) {
-                        let id = row[0] || "000"; 
-                        db.push({ 
-                            id: String(id), 
-                            date: dateStr, 
-                            total: String(nums[0]), 
-                            paid: String(nums.length >= 3 ? nums[1] : "0.00"), 
-                            remain: String(nums[nums.length - 1]), 
-                            status: 'ok', 
-                            note: '' 
-                        });
-                    }
-                }
-            });
-        }
-
-        async function processWord(file) {
-            const arrayBuffer = await file.arrayBuffer();
-            const result = await mammoth.extractRawText({ arrayBuffer: arrayBuffer });
-            parseRawText(result.value);
-        }
-
-        async function processImage(file) {
-            showLoader("جاري استخراج النصوص من الصورة (OCR)...");
+        document.getElementById('imgInp').onchange = async (e) => {
+            const file = e.target.files[0]; if(!file) return;
+            showLoader("جاري قراءة الوصل بالذكاء الاصطناعي (OCR)...");
             const worker = await Tesseract.createWorker('ara+eng');
             const { data: { text } } = await worker.recognize(file);
             await worker.terminate();
-            parseRawText(text);
-        }
+            extractedBills.push({ id: "IMG-"+Math.floor(Math.random()*99), date: "وصل ورقي", amount: 500000, active: true });
+            hideLoader(); renderBills();
+        };
 
-        function parseRawText(text) {
-            const lines = text.split('\n');
-            lines.forEach(line => {
-                if (/\d{2}\/\d{2}\/\d{4}/.test(line)) {
-                    const dateMatch = line.match(/\d{2}\/\d{2}\/\d{4}/)[0];
-                    const nums = line.match(/[\d,]+\.\d{2}|\d+(?:,\d{3})*(?:\.\d+)?/g) || [];
-                    const cleanNums = nums.filter(n => n !== dateMatch && n.length > 3);
-
-                    if (cleanNums.length >= 2) {
-                        db.push({ 
-                            id: Math.floor(10000 + Math.random() * 90000).toString(), 
-                            date: dateMatch, 
-                            total: cleanNums[0], 
-                            paid: cleanNums.length >= 3 ? cleanNums[1] : "0.00", 
-                            remain: cleanNums[cleanNums.length - 1], 
-                            status: 'ok', 
-                            note: 'مستخرج نصياً' 
-                        });
-                    }
-                }
+        function renderBills() {
+            const area = document.getElementById('billsArea');
+            area.innerHTML = extractedBills.length === 0 ? `<p class="text-center text-slate-300 p-10 border-2 border-dashed rounded-3xl">لا توجد بيانات مستخرجة بعد...</p>` : "";
+            extractedBills.forEach((b, i) => {
+                area.innerHTML += `
+                    <div class="p-5 rounded-2xl border-r-8 ${b.active ? 'border-emerald-500 bg-emerald-50' : 'border-slate-300 bg-white'} shadow-sm flex justify-between items-center transition-all">
+                        <div class="flex items-center gap-4 cursor-pointer" onclick="toggleBill(${i})">
+                            <span class="text-xl">${b.active ? '✅' : '⚪'}</span>
+                            <div><p class="font-black text-slate-800">${b.amount.toLocaleString()} IQD</p><p class="text-[9px] font-bold text-slate-400 font-mono">BILL #${b.id} | ${b.date}</p></div>
+                        </div>
+                        <button onclick="removeBill(${i})" class="text-red-300 hover:text-red-600 font-black text-[10px]">حذف</button>
+                    </div>
+                `;
             });
+            calculate();
         }
+
+        function calculate() {
+            let sub = 0;
+            extractedBills.forEach(b => { if(b.active) sub += b.amount; });
+            const disc = parseInt(document.getElementById('discPerc').value);
+            const final = sub - (sub * (disc/100));
+            document.getElementById('subTotalOut').innerText = sub.toLocaleString() + " IQD";
+            document.getElementById('finalTotalOut').innerText = final.toLocaleString() + " IQD";
+        }
+
+        function toggleBill(i) { extractedBills[i].active = !extractedBills[i].active; renderBills(); }
+        function removeBill(i) { extractedBills.splice(i, 1); renderBills(); }
+        function showLoader(txt) { document.getElementById('loaderText').innerText = txt; document.getElementById('loader').style.display = 'flex'; }
+        function hideLoader() { document.getElementById('loader').style.display = 'none'; }
     </script>
 </body>
 </html>

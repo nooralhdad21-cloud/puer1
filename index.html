@@ -3,254 +3,344 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام بيور العلمي - الإصدار المطور 2026</title>
+    <title>Pure Scientific Global System 2026</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
-        body { font-family: 'Cairo', sans-serif; background-color: #f8fafc; }
-        .glass { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
-        .sync-badge { padding: 2px 10px; border-radius: 20px; font-size: 10px; font-weight: 800; }
-        .status-ok { background: #dcfce7; color: #15803d; }
-        .status-wait { background: #fef9c3; color: #a16207; }
-        .status-err { background: #fee2e2; color: #b91c1c; }
-        
-        #loader { display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.9); z-index: 9999; flex-direction: column; align-items: center; justify-content: center; color: white; }
-        .spinner { border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid #6366f1; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        
-        @media print { .no-print { display: none !important; } }
+        :root { --primary: #6366f1; --dark: #0f172a; }
+        body { font-family: 'Cairo', sans-serif; background-color: #f1f5f9; overflow-x: hidden; }
+        .admin-gradient { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); }
+        .glass-card { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.4s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @media print { .no-print { display: none !important; } .print-area { display: block !important; width: 100%; } }
     </style>
 </head>
-<body onload="initSystem()">
+<body onload="checkAuth()">
 
-    <div id="loader">
-        <div class="spinner mb-4"></div>
-        <p id="loaderText" class="font-bold text-lg">جاري معالجة البيانات...</p>
+    <div id="loginScreen" class="fixed inset-0 z-[9999] bg-slate-900 flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-md rounded-[2.5rem] p-10 shadow-2xl text-center">
+            <div class="w-20 h-20 bg-indigo-600 rounded-3xl mx-auto mb-6 flex items-center justify-center shadow-lg shadow-indigo-500/50">
+                <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+            </div>
+            <h2 class="text-2xl font-black text-slate-800 mb-2">تسجيل الدخول للنظام</h2>
+            <p class="text-slate-400 text-sm mb-8">نظام بيور العلمي - الإصدار العالمي</p>
+            <input type="text" id="userInp" placeholder="اسم المستخدم" class="w-full mb-4 p-4 rounded-2xl bg-slate-100 border-none outline-none font-bold">
+            <input type="password" id="passInp" placeholder="كلمة المرور" class="w-full mb-6 p-4 rounded-2xl bg-slate-100 border-none outline-none font-bold">
+            <button onclick="login()" class="w-full bg-indigo-600 text-white p-4 rounded-2xl font-black hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-200">دخول آمن</button>
+        </div>
     </div>
 
-    <div class="max-w-6xl mx-auto p-4 md:p-8">
+    <aside id="sidebar" class="no-print fixed right-0 top-0 h-full w-64 admin-gradient text-white p-6 z-50 transform translate-x-full lg:translate-x-0 transition-transform duration-300">
+        <div class="mb-10 text-center">
+            <h1 class="text-xl font-black tracking-tighter italic">PURE GLOBAL <span class="text-indigo-400">PRO</span></h1>
+            <p class="text-[10px] text-slate-500 uppercase font-bold mt-1">Version 4.0 Secure</p>
+        </div>
+        <nav class="space-y-2">
+            <button onclick="showTab('dashboard')" class="w-full flex items-center gap-3 p-4 rounded-2xl hover:bg-white/10 transition-all text-sm font-bold active-nav"><span class="text-lg">📊</span> الإحصائيات</button>
+            <button onclick="showTab('matching')" class="w-full flex items-center gap-3 p-4 rounded-2xl hover:bg-white/10 transition-all text-sm font-bold"><span class="text-lg">📑</span> المطابقة المالية</button>
+            <button onclick="showTab('clients')" class="w-full flex items-center gap-3 p-4 rounded-2xl hover:bg-white/10 transition-all text-sm font-bold"><span class="text-lg">👥</span> قاعدة الزبائن</button>
+            <button onclick="showTab('admin')" id="adminTabBtn" class="w-full flex items-center gap-3 p-4 rounded-2xl hover:bg-white/10 transition-all text-sm font-bold text-orange-400"><span class="text-lg">⚙️</span> لوحة المدير</button>
+        </nav>
+        <div class="absolute bottom-6 right-6 left-6">
+            <button onclick="logout()" class="w-full p-4 rounded-2xl bg-red-500/10 text-red-500 font-bold text-xs hover:bg-red-500 hover:text-white transition-all italic">تسجيل الخروج</button>
+        </div>
+    </aside>
+
+    <main class="lg:mr-64 p-4 lg:p-8 min-h-screen">
         
-        <header class="no-print mb-8 flex flex-col md:flex-row justify-between items-center gap-4 bg-slate-900 p-6 rounded-[2rem] shadow-2xl border-b-4 border-indigo-600">
-            <div class="flex items-center gap-4">
-                <div class="bg-indigo-600 p-3 rounded-2xl">
-                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
-                </div>
-                <div>
-                    <h1 class="text-xl font-black text-white italic">نظام بيور العلمي <span class="text-indigo-400 text-xs font-normal mr-2">PRO v3.5</span></h1>
-                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Management & Sync System</p>
-                </div>
+        <header class="no-print flex justify-between items-center mb-8 glass-card p-6 rounded-[2rem] shadow-sm">
+            <div>
+                <h2 id="pageTitle" class="text-2xl font-black text-slate-800">لوحة التحكم</h2>
+                <p class="text-xs text-slate-400 font-bold" id="currentDateDisplay"></p>
             </div>
-            <div class="flex gap-2 bg-slate-800 p-1 rounded-2xl">
-                <button onclick="switchTab('sync')" id="tabBtnSync" class="px-6 py-2 rounded-xl text-xs font-black transition-all bg-indigo-600 text-white shadow-lg">لوحة المزامنة</button>
-                <button onclick="switchTab('match')" id="tabBtnMatch" class="px-6 py-2 rounded-xl text-xs font-black transition-all text-slate-400 hover:text-white">شاشة المطابقة</button>
+            <div class="flex items-center gap-4">
+                <div class="text-left hidden md:block">
+                    <p class="text-xs font-black text-slate-800" id="userNameLabel">User Name</p>
+                    <p class="text-[10px] text-emerald-500 font-bold">متصل الآن • Online</p>
+                </div>
+                <div class="w-12 h-12 bg-slate-200 rounded-2xl flex items-center justify-center font-black text-slate-600">N</div>
             </div>
         </header>
 
-        <section id="syncSection" class="no-print">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                <div class="md:col-span-3 glass p-6 rounded-[2rem] shadow-sm border border-slate-200">
-                    <div class="relative">
-                        <input type="text" id="mainSearch" oninput="filterClients()" placeholder="ابحث عن صيدلية، مذخر، أو محافظة (بغداد، البصرة...)" class="w-full bg-slate-100 border-none rounded-2xl p-4 text-sm font-bold focus:ring-2 focus:ring-indigo-500 outline-none pr-12">
-                        <span class="absolute right-4 top-4 text-slate-400 text-xl">🔍</span>
-                    </div>
+        <section id="dashboard" class="tab-content active">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="bg-indigo-600 p-8 rounded-[2.5rem] text-white shadow-xl shadow-indigo-200">
+                    <p class="text-xs font-bold opacity-80 mb-2">إجمالي المطابقات (الشهر)</p>
+                    <h3 class="text-4xl font-black font-mono">14,250,000 <span class="text-sm">IQD</span></h3>
                 </div>
-                <div class="glass p-6 rounded-[2rem] shadow-sm border border-slate-200 flex items-center justify-around text-center">
-                    <div><span class="block text-[10px] font-black text-slate-400 uppercase">مكتمل</span><span id="stat-ok" class="text-emerald-600 font-black text-xl font-mono">0</span></div>
-                    <div class="h-8 w-px bg-slate-200"></div>
-                    <div><span class="block text-[10px] font-black text-slate-400 uppercase">تنبيه</span><span id="stat-err" class="text-red-500 font-black text-xl font-mono">0</span></div>
+                <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100">
+                    <p class="text-xs font-bold text-slate-400 mb-2">عدد الزبائن النشطين</p>
+                    <h3 class="text-4xl font-black text-slate-800">128</h3>
                 </div>
-            </div>
-
-            <div class="bg-white rounded-[2.5rem] shadow-xl border border-slate-100 overflow-hidden">
-                <table class="w-full text-right">
-                    <thead class="bg-slate-50 border-b border-slate-100 font-black text-[11px] text-slate-400 uppercase">
-                        <tr>
-                            <th class="p-6">الجهة المستهدفة</th>
-                            <th class="p-6">الموقع</th>
-                            <th class="p-6">آخر تحديث للأصيل</th>
-                            <th class="p-6 text-center">الحالة</th>
-                            <th class="p-6 text-center">إجراء</th>
-                        </tr>
-                    </thead>
-                    <tbody id="syncTableBody" class="divide-y divide-slate-50 text-sm font-bold text-slate-700">
-                        </tbody>
-                </table>
+                <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 text-center flex flex-col justify-center items-center">
+                    <p class="text-xs font-bold text-orange-500 mb-2">تنبيهات الأصيل</p>
+                    <div class="bg-orange-50 text-orange-600 px-4 py-2 rounded-full font-black text-xs">3 مطالبات متأخرة</div>
+                </div>
             </div>
         </section>
 
-        <section id="matchSection" class="hidden">
-            <div class="no-print grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                <div class="bg-slate-800 p-4 rounded-[2rem] flex gap-2">
-                    <button onclick="document.getElementById('fileInp').click()" class="flex-1 bg-indigo-600 text-white p-3 rounded-xl text-[10px] font-black hover:bg-indigo-700">رفع ملف (PDF/XLS)</button>
-                    <button onclick="document.getElementById('imgInp').click()" class="flex-1 bg-sky-600 text-white p-3 rounded-xl text-[10px] font-black hover:bg-sky-700">تصوير (OCR)</button>
+        <section id="matching" class="tab-content">
+            <div class="no-print glass-card p-8 rounded-[2.5rem] mb-8 border-2 border-dashed border-indigo-200">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                    <div>
+                        <h4 class="font-black text-slate-800 mb-4">رفع ومعالجة البيانات الذكية</h4>
+                        <div class="flex gap-2">
+                            <button onclick="document.getElementById('universalInput').click()" class="bg-indigo-600 text-white px-6 py-4 rounded-2xl text-xs font-black shadow-lg hover:bg-indigo-700 transition-all flex-1">رفع (Excel / PDF)</button>
+                            <button onclick="document.getElementById('ocrInput').click()" class="bg-sky-600 text-white px-6 py-4 rounded-2xl text-xs font-black shadow-lg hover:bg-sky-700 transition-all flex-1 font-mono italic">SCAN IMAGE (OCR)</button>
+                        </div>
+                        <input type="file" id="universalInput" class="hidden" accept=".xlsx, .xls, .pdf">
+                        <input type="file" id="ocrInput" class="hidden" accept="image/*">
+                    </div>
+                    <div class="bg-slate-50 p-4 rounded-2xl">
+                        <label class="text-[10px] font-black text-slate-400 block mb-2 uppercase italic tracking-widest">اختيار المذخر / الصيدلية</label>
+                        <input list="clientSuggestions" id="matchClientInp" class="w-full bg-white border border-slate-200 p-4 rounded-xl text-sm font-bold outline-none" placeholder="اكتب للبحث...">
+                        <datalist id="clientSuggestions"></datalist>
+                    </div>
                 </div>
-                <button onclick="window.print()" class="bg-emerald-600 text-white p-4 rounded-[2rem] text-xs font-black shadow-lg shadow-emerald-500/20">إصدار التقرير النهائي للطباعة 🖨️</button>
-                <button onclick="switchTab('sync')" class="bg-slate-200 text-slate-700 p-4 rounded-[2rem] text-xs font-black">العودة للبحث ⬅</button>
-                
-                <input type="file" id="fileInp" class="hidden" accept=".pdf, .xlsx, .xls">
-                <input type="file" id="imgInp" class="hidden" accept="image/*">
             </div>
 
-            <div class="bg-white p-10 rounded-[3rem] shadow-2xl border border-slate-200 print:shadow-none print:border-none">
-                <div class="flex justify-between border-b-4 border-slate-900 pb-6 mb-8">
-                    <div><h1 class="text-3xl font-black text-slate-900">مكتب بيور العلمي</h1><p class="text-xs font-bold text-slate-400 uppercase">Pure Scientific Bureau</p></div>
-                    <div class="text-left font-mono font-bold text-xs"><p>Date: <span id="outDate">--/--/--</span></p><p id="outLoc">Location: --</p></div>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-                    <div class="bg-slate-900 text-white p-6 rounded-3xl shadow-inner">
-                        <span class="text-[10px] text-indigo-400 font-black uppercase">Customer Name:</span>
-                        <input type="text" id="clientNameInp" class="w-full bg-transparent border-none text-2xl font-black outline-none mt-2" placeholder="اسم الصيدلية...">
+            <div id="printableReport" class="bg-white p-10 rounded-[3rem] shadow-2xl border border-slate-200 min-h-[800px] flex flex-col relative overflow-hidden">
+                <div class="flex justify-between border-b-8 border-slate-900 pb-8 mb-10 items-center">
+                    <div>
+                        <h1 class="text-5xl font-black text-slate-900 tracking-tighter">مكتب بيور العلمي</h1>
+                        <p class="text-sm font-black text-slate-400 uppercase italic mt-1">Pure Scientific Bureau For Trading</p>
                     </div>
-                    <div class="bg-slate-50 p-6 rounded-3xl border border-slate-200 flex flex-col justify-center">
-                        <span class="text-[10px] text-slate-400 font-black uppercase">Discount Rate:</span>
-                        <select id="discPerc" onchange="calculate()" class="text-2xl font-black text-emerald-600 bg-transparent outline-none cursor-pointer">
-                            <option value="0">0% خصم</option><option value="5">5% خصم</option><option value="10">10% خصم</option>
-                        </select>
+                    <div class="text-left font-mono font-bold leading-tight">
+                        <p class="text-lg text-indigo-600" id="repLoc">BAGHDAD / IRAQ</p>
+                        <p class="text-xs" id="repDate">00/00/2026</p>
+                        <p class="text-[10px] bg-red-600 text-white px-2 py-1 mt-2 inline-block">MATCHING REPORT</p>
                     </div>
                 </div>
 
-                <div id="billsArea" class="space-y-3 min-h-[200px]">
-                    </div>
+                <div id="matchBillsContainer" class="flex-grow space-y-4">
+                    <p class="text-center text-slate-300 italic py-20 font-bold">لا توجد بيانات محملة حالياً.. ارفع ملفاً للبدء</p>
+                </div>
 
-                <div class="mt-12 pt-8 border-t-2 border-slate-100 flex flex-col md:flex-row justify-between items-end gap-6">
-                    <div class="space-y-2">
-                        <p class="text-xs font-black text-slate-400">Total Calculation:</p>
-                        <p id="subTotalOut" class="text-2xl font-black text-slate-400 line-through decoration-red-400">0 IQD</p>
-                        <div class="bg-indigo-600 p-6 rounded-[2rem] text-white shadow-xl shadow-indigo-600/30">
-                            <span class="text-[10px] font-black opacity-70 uppercase tracking-widest">Final Amount Due:</span>
-                            <p id="finalTotalOut" class="text-4xl font-black font-mono">0 IQD</p>
+                <div class="mt-12 pt-10 border-t-4 border-slate-900">
+                    <div class="flex justify-between items-end">
+                        <div class="space-y-4">
+                            <div class="bg-indigo-50 border-r-8 border-indigo-600 p-8 rounded-[2rem] inline-block shadow-sm">
+                                <p class="text-[10px] font-black text-indigo-600 mb-2 uppercase tracking-widest">صافي المبلغ المطلوب النهائي:</p>
+                                <p id="finalTotalDisplay" class="text-5xl font-black text-indigo-900 font-mono tracking-tighter">0.00 IQD</p>
+                            </div>
+                            <p id="tafgeetAr" class="text-sm font-black text-indigo-700 bg-white border-2 border-indigo-100 p-4 rounded-2xl italic shadow-inner">....</p>
+                        </div>
+                        <div class="flex gap-10 no-print">
+                            <button onclick="window.print()" class="bg-slate-900 text-white px-10 py-6 rounded-[2rem] text-sm font-black hover:scale-105 transition-all shadow-2xl">طـــبـــاعة التقرير</button>
                         </div>
                     </div>
-                    <div class="flex gap-4">
-                        <div class="text-center"><div class="w-24 h-16 border-2 border-dashed border-slate-200 rounded-xl mb-1 bg-slate-50"></div><span class="text-[9px] font-black text-slate-400 uppercase">Accounts Dept</span></div>
-                        <div class="text-center"><div class="w-24 h-16 border-2 border-dashed border-slate-200 rounded-xl mb-1 bg-slate-50"></div><span class="text-[9px] font-black text-slate-400 uppercase">Customer Stamp</span></div>
+                </div>
+            </div>
+        </section>
+
+        <section id="admin" class="tab-content">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="glass-card p-8 rounded-[2.5rem] shadow-sm">
+                    <h3 class="text-xl font-black mb-6 flex items-center gap-2">👤 إدارة المستخدمين <span class="text-[10px] bg-indigo-100 text-indigo-600 px-2 py-1 rounded-md">Admins Only</span></h3>
+                    <div class="space-y-4 mb-8" id="usersList"></div>
+                    <div class="bg-slate-50 p-6 rounded-3xl border border-slate-100">
+                        <p class="text-xs font-black text-slate-400 mb-4 uppercase">إضافة مستخدم جديد</p>
+                        <div class="space-y-3">
+                            <input type="text" id="newUserName" placeholder="اسم المستخدم" class="w-full p-3 rounded-xl border border-slate-200 text-sm font-bold">
+                            <input type="password" id="newUserPass" placeholder="كلمة المرور" class="w-full p-3 rounded-xl border border-slate-200 text-sm font-bold">
+                            <button onclick="addUser()" class="w-full bg-emerald-600 text-white p-3 rounded-xl text-xs font-black">حفظ المستخدم</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="glass-card p-8 rounded-[2.5rem] shadow-sm">
+                    <h3 class="text-xl font-black mb-6">✏️ تعديل محتوى النظام</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="text-[10px] font-black text-slate-400 block mb-2 uppercase">عنوان المكتب (عربي)</label>
+                            <input type="text" id="editOfficeName" class="w-full p-4 rounded-2xl bg-slate-100 border-none font-bold outline-none" value="مكتب بيور العلمي">
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-black text-slate-400 block mb-2 uppercase italic">Office Name (English)</label>
+                            <input type="text" id="editOfficeSub" class="w-full p-4 rounded-2xl bg-slate-100 border-none font-bold outline-none font-mono" value="Pure Scientific Bureau">
+                        </div>
+                        <button onclick="saveSystemSettings()" class="bg-indigo-600 text-white w-full p-4 rounded-2xl font-black mt-4">تحديث إعدادات النظام</button>
                     </div>
                 </div>
             </div>
         </section>
-    </div>
+    </main>
 
     <script>
-        // داتا تجريبية تحاكي المزامنة مع الأصيل
-        let dbClients = [
-            { name: "مذخر بغداد الدولي", prov: "بغداد", city: "الكرخ", status: "ok", lastSync: "2026/04/02 09:00" },
-            { name: "صيدلية النهرين", prov: "صلاح الدين", city: "تكريت", status: "err", lastSync: "2026/04/01 14:00" },
-            { name: "مكتب بيور البصرة", prov: "البصرة", city: "المركز", status: "ok", lastSync: "2026-04-02 08:30" },
-            { name: "صيدلية الحياة", prov: "نينوى", city: "الموصل", status: "ok", lastSync: "2026-03-30 10:00" },
-            { name: "مذخر الشفاء الحديث", prov: "بغداد", city: "الرصافة", status: "ok", lastSync: "2026-04-02 10:15" }
+        // --- Core Configuration ---
+        const MASTER_ADMIN = { user: "nooraldein", pass: "10582467913", role: "super" };
+        let currentUser = null;
+        let dbUsers = JSON.parse(localStorage.getItem('pure_users')) || [];
+        let clients = JSON.parse(localStorage.getItem('pure_clients')) || [
+            { name: "مذخر بغداد الحديث", location: "بغداد" },
+            { name: "صيدلية النبلاء", location: "البصرة" }
         ];
 
-        let extractedBills = [];
+        // --- Authentication ---
+        function login() {
+            const u = document.getElementById('userInp').value;
+            const p = document.getElementById('passInp').value;
 
-        function initSystem() {
-            renderSyncTable(dbClients);
-            document.getElementById('outDate').innerText = new Date().toLocaleDateString('ar-IQ');
+            if(u === MASTER_ADMIN.user && p === MASTER_ADMIN.pass) {
+                currentUser = MASTER_ADMIN;
+            } else {
+                const found = dbUsers.find(x => x.user === u && x.pass === p);
+                if(found) currentUser = found;
+            }
+
+            if(currentUser) {
+                document.getElementById('loginScreen').style.display = 'none';
+                localStorage.setItem('pure_session', JSON.stringify(currentUser));
+                initApp();
+            } else {
+                alert("بيانات الدخول غير صحيحة يا صديقي!");
+            }
         }
 
-        function switchTab(tab) {
-            const isSync = tab === 'sync';
-            document.getElementById('syncSection').classList.toggle('hidden', !isSync);
-            document.getElementById('matchSection').classList.toggle('hidden', isSync);
+        function checkAuth() {
+            const session = localStorage.getItem('pure_session');
+            if(session) {
+                currentUser = JSON.parse(session);
+                document.getElementById('loginScreen').style.display = 'none';
+                initApp();
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('pure_session');
+            location.reload();
+        }
+
+        // --- Tabs Logic ---
+        function showTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
             
-            document.getElementById('tabBtnSync').className = isSync ? "px-6 py-2 rounded-xl text-xs font-black bg-indigo-600 text-white shadow-lg" : "px-6 py-2 rounded-xl text-xs font-black text-slate-400 hover:text-white";
-            document.getElementById('tabBtnMatch').className = !isSync ? "px-6 py-2 rounded-xl text-xs font-black bg-indigo-600 text-white shadow-lg" : "px-6 py-2 rounded-xl text-xs font-black text-slate-400 hover:text-white";
+            document.querySelectorAll('aside nav button').forEach(btn => btn.classList.remove('bg-white/20', 'shadow-lg'));
+            const target = Array.from(document.querySelectorAll('aside nav button')).find(b => b.onclick.toString().includes(tabId));
+            if(target) target.classList.add('bg-white/20', 'shadow-lg');
+
+            document.getElementById('pageTitle').innerText = 
+                tabId === 'dashboard' ? 'الإحصائيات العامة' : 
+                tabId === 'matching' ? 'نظام المطابقة الذكي' : 
+                tabId === 'clients' ? 'إدارة الزبائن' : 'لوحة التحكم والمدير';
         }
 
-        function renderSyncTable(data) {
-            const body = document.getElementById('syncTableBody');
-            body.innerHTML = "";
-            let stats = { ok: 0, err: 0 };
-
-            data.forEach(c => {
-                const badge = c.status === 'ok' ? 'status-ok' : 'status-err';
-                const statusTxt = c.status === 'ok' ? 'مُزامن ✅' : 'خطأ ربط ⚠️';
-                if(c.status==='ok') stats.ok++; else stats.err++;
-
-                body.innerHTML += `
-                    <tr class="hover:bg-slate-50 transition-colors">
-                        <td class="p-6">${c.name}</td>
-                        <td class="p-6 text-slate-400 text-xs">${c.prov} - ${c.city}</td>
-                        <td class="p-6 font-mono text-[10px]">${c.lastSync}</td>
-                        <td class="p-6 text-center"><span class="sync-badge ${badge}">${statusTxt}</span></td>
-                        <td class="p-6 text-center"><button onclick="startMatch('${c.name}', '${c.prov}/${c.city}')" class="text-indigo-600 hover:underline">مطابقة ↗</button></td>
-                    </tr>
-                `;
-            });
-            document.getElementById('stat-ok').innerText = stats.ok;
-            document.getElementById('stat-err').innerText = stats.err;
+        // --- Admin Controls ---
+        function initApp() {
+            document.getElementById('userNameLabel').innerText = currentUser.user;
+            document.getElementById('currentDateDisplay').innerText = new Date().toLocaleDateString('ar-IQ', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            document.getElementById('repDate').innerText = new Date().toLocaleDateString('ar-IQ');
+            
+            // Restricted UI
+            if(currentUser.role !== 'super') {
+                document.getElementById('adminTabBtn').style.display = 'none';
+            }
+            
+            renderUsers();
+            populateClientSuggestions();
         }
 
-        function filterClients() {
-            const key = document.getElementById('mainSearch').value.toLowerCase();
-            const filtered = dbClients.filter(c => c.name.toLowerCase().includes(key) || c.prov.includes(key));
-            renderSyncTable(filtered);
+        function addUser() {
+            const u = document.getElementById('newUserName').value;
+            const p = document.getElementById('newUserPass').value;
+            if(!u || !p) return alert("امسح الحقول واكتبها صح");
+            dbUsers.push({ user: u, pass: p, role: 'admin' });
+            localStorage.setItem('pure_users', JSON.stringify(dbUsers));
+            renderUsers();
+            alert("تمت إضافة المستخدم بنجاح");
         }
 
-        function startMatch(name, loc) {
-            document.getElementById('clientNameInp').value = name;
-            document.getElementById('outLoc').innerText = "Location: " + loc;
-            switchTab('match');
+        function renderUsers() {
+            const list = document.getElementById('usersList');
+            list.innerHTML = dbUsers.map((u, i) => `
+                <div class="flex justify-between items-center p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                    <span class="font-bold text-sm text-slate-700">${u.user}</span>
+                    <button onclick="deleteUser(${i})" class="text-red-500 text-xs font-black">حذف</button>
+                </div>
+            `).join('');
         }
 
-        // --- محرك الاستخراج والمطابقة ---
-        document.getElementById('fileInp').onchange = (e) => {
-            const file = e.target.files[0]; if(!file) return;
-            showLoader("جاري معالجة الملف واستخراج المبالغ...");
-            setTimeout(() => {
-                extractedBills = [
-                    { id: "10552", date: "2026/03/10", amount: 1250000, active: true },
-                    { id: "10680", date: "2026/03/25", amount: 450000, active: true }
-                ];
-                hideLoader(); renderBills();
-            }, 1200);
+        function deleteUser(i) {
+            dbUsers.splice(i, 1);
+            localStorage.setItem('pure_users', JSON.stringify(dbUsers));
+            renderUsers();
+        }
+
+        function saveSystemSettings() {
+            const n = document.getElementById('editOfficeName').value;
+            const s = document.getElementById('editOfficeSub').value;
+            document.querySelector('#printableReport h1').innerText = n;
+            document.querySelector('#printableReport p').innerText = s;
+            alert("تم تحديث معلومات المكتب عالمياً");
+        }
+
+        function populateClientSuggestions() {
+            const dl = document.getElementById('clientSuggestions');
+            dl.innerHTML = clients.map(c => `<option value="${c.name}">${c.location}</option>`).join('');
+        }
+
+        // --- Universal File Reader Logic ---
+        document.getElementById('universalInput').onchange = async function(e) {
+            const file = e.target.files[0];
+            if(!file) return;
+
+            if(file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
+                processExcel(file);
+            } else if(file.name.endsWith('.pdf')) {
+                processPDF(file);
+            }
         };
 
-        document.getElementById('imgInp').onchange = async (e) => {
-            const file = e.target.files[0]; if(!file) return;
-            showLoader("جاري قراءة الوصل بالذكاء الاصطناعي (OCR)...");
-            const worker = await Tesseract.createWorker('ara+eng');
-            const { data: { text } } = await worker.recognize(file);
-            await worker.terminate();
-            extractedBills.push({ id: "IMG-"+Math.floor(Math.random()*99), date: "وصل ورقي", amount: 500000, active: true });
-            hideLoader(); renderBills();
-        };
+        async function processExcel(file) {
+            const data = await file.arrayBuffer();
+            const workbook = XLSX.read(data);
+            const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+            const json = XLSX.utils.sheet_to_json(firstSheet);
+            renderBills(json);
+        }
 
-        function renderBills() {
-            const area = document.getElementById('billsArea');
-            area.innerHTML = extractedBills.length === 0 ? `<p class="text-center text-slate-300 p-10 border-2 border-dashed rounded-3xl">لا توجد بيانات مستخرجة بعد...</p>` : "";
-            extractedBills.forEach((b, i) => {
-                area.innerHTML += `
-                    <div class="p-5 rounded-2xl border-r-8 ${b.active ? 'border-emerald-500 bg-emerald-50' : 'border-slate-300 bg-white'} shadow-sm flex justify-between items-center transition-all">
-                        <div class="flex items-center gap-4 cursor-pointer" onclick="toggleBill(${i})">
-                            <span class="text-xl">${b.active ? '✅' : '⚪'}</span>
-                            <div><p class="font-black text-slate-800">${b.amount.toLocaleString()} IQD</p><p class="text-[9px] font-bold text-slate-400 font-mono">BILL #${b.id} | ${b.date}</p></div>
+        function renderBills(data) {
+            const container = document.getElementById('matchBillsContainer');
+            container.innerHTML = "";
+            let total = 0;
+
+            data.forEach((row, i) => {
+                const amount = parseFloat(row.Amount || row['المبلغ'] || row.Balance || 0);
+                const id = row.ID || row['رقم الفاتورة'] || '0000';
+                total += amount;
+
+                container.innerHTML += `
+                    <div class="flex justify-between items-center p-6 bg-slate-50 rounded-3xl border border-slate-100 hover:bg-indigo-50 transition-all group">
+                        <div>
+                            <span class="text-[10px] font-black text-slate-400 block uppercase">Bill ID: #${id}</span>
+                            <span class="text-xl font-black text-slate-900 font-mono">${amount.toLocaleString()} IQD</span>
                         </div>
-                        <button onclick="removeBill(${i})" class="text-red-300 hover:text-red-600 font-black text-[10px]">حذف</button>
+                        <div class="text-right">
+                            <span class="text-xs font-bold text-slate-500 block italic">${row.Date || '2026/--/--'}</span>
+                            <button onclick="this.parentElement.parentElement.remove(); reCalc();" class="no-print opacity-0 group-hover:opacity-100 text-red-500 font-black text-[10px] uppercase tracking-widest mt-2 transition-all">إزالة الفاتورة</button>
+                        </div>
                     </div>
                 `;
             });
-            calculate();
+            reCalc();
         }
 
-        function calculate() {
-            let sub = 0;
-            extractedBills.forEach(b => { if(b.active) sub += b.amount; });
-            const disc = parseInt(document.getElementById('discPerc').value);
-            const final = sub - (sub * (disc/100));
-            document.getElementById('subTotalOut').innerText = sub.toLocaleString() + " IQD";
-            document.getElementById('finalTotalOut').innerText = final.toLocaleString() + " IQD";
+        function reCalc() {
+            let sum = 0;
+            document.querySelectorAll('#matchBillsContainer .font-mono').forEach(el => {
+                sum += parseFloat(el.innerText.replace(/,/g, ''));
+            });
+            document.getElementById('finalTotalDisplay').innerText = sum.toLocaleString(undefined, {minimumFractionDigits:2}) + " IQD";
+            document.getElementById('tafgeetAr').innerText = "فقط " + sum.toLocaleString('ar-IQ') + " دينار عراقي لا غير";
         }
-
-        function toggleBill(i) { extractedBills[i].active = !extractedBills[i].active; renderBills(); }
-        function removeBill(i) { extractedBills.splice(i, 1); renderBills(); }
-        function showLoader(txt) { document.getElementById('loaderText').innerText = txt; document.getElementById('loader').style.display = 'flex'; }
-        function hideLoader() { document.getElementById('loader').style.display = 'none'; }
     </script>
 </body>
 </html>

@@ -3,254 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام بيور العلمي - الإصدار المطور 2026</title>
+    <title>نظام بيور العلمي - المحرك الأصلي</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
 
     <style>
-        body { font-family: 'Cairo', sans-serif; background-color: #f8fafc; }
-        .glass { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
-        .sync-badge { padding: 2px 10px; border-radius: 20px; font-size: 10px; font-weight: 800; }
-        .status-ok { background: #dcfce7; color: #15803d; }
-        .status-wait { background: #fef9c3; color: #a16207; }
-        .status-err { background: #fee2e2; color: #b91c1c; }
-        
-        #loader { display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.9); z-index: 9999; flex-direction: column; align-items: center; justify-content: center; color: white; }
-        .spinner { border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid #6366f1; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        
-        @media print { .no-print { display: none !important; } }
+        body { font-family: 'Cairo', sans-serif; background-color: #f1f5f9; }
+        .invoice-card { transition: all 0.3s ease; border-right: 6px solid #e2e8f0; }
+        .invoice-card.active { border-right-color: #10b981; background-color: #f0fdf4; }
+        .no-print { display: block; }
+        @media print { .no-print { display: none !important; } .print-only { display: block !important; } body { background: white; padding: 0; } }
     </style>
 </head>
-<body onload="initSystem()">
+<body class="p-4 md:p-8">
 
-    <div id="loader">
-        <div class="spinner mb-4"></div>
-        <p id="loaderText" class="font-bold text-lg">جاري معالجة البيانات...</p>
+    <div id="loader" class="hidden fixed inset-0 bg-slate-900/90 z-50 flex flex-col items-center justify-center text-white">
+        <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-indigo-500 mb-4"></div>
+        <p class="font-bold">جاري تحليل البيانات...</p>
     </div>
 
-    <div class="max-w-6xl mx-auto p-4 md:p-8">
-        
-        <header class="no-print mb-8 flex flex-col md:flex-row justify-between items-center gap-4 bg-slate-900 p-6 rounded-[2rem] shadow-2xl border-b-4 border-indigo-600">
-            <div class="flex items-center gap-4">
-                <div class="bg-indigo-600 p-3 rounded-2xl">
-                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
-                </div>
+    <div class="max-w-5xl mx-auto">
+        <div class="no-print bg-slate-900 text-white p-6 rounded-3xl mb-8 flex justify-between items-center shadow-xl">
+            <div>
+                <h1 class="text-2xl font-black">بيور العلمي <span class="text-indigo-400 text-sm italic">Original Code</span></h1>
+                <p class="text-xs opacity-60">نظام المطابقة الذكي للمكاتب العلمية</p>
+            </div>
+            <div class="flex gap-3">
+                <button onclick="document.getElementById('fileInput').click()" class="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-xl text-xs font-bold">رفع ملف (Excel/PDF)</button>
+                <button onclick="document.getElementById('cameraInput').click()" class="bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded-xl text-xs font-bold">تصوير وصل</button>
+            </div>
+            <input type="file" id="fileInput" class="hidden" accept=".xlsx, .xls, .pdf">
+            <input type="file" id="cameraInput" class="hidden" accept="image/*">
+        </div>
+
+        <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-200" id="reportArea">
+            <div class="flex justify-between items-start border-b-2 border-slate-100 pb-6 mb-8">
                 <div>
-                    <h1 class="text-xl font-black text-white italic">نظام بيور العلمي <span class="text-indigo-400 text-xs font-normal mr-2">PRO v3.5</span></h1>
-                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Management & Sync System</p>
+                    <h2 class="text-2xl font-black text-slate-800">مكتب بيور العلمي</h2>
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Scientific Bureau Statement</p>
                 </div>
-            </div>
-            <div class="flex gap-2 bg-slate-800 p-1 rounded-2xl">
-                <button onclick="switchTab('sync')" id="tabBtnSync" class="px-6 py-2 rounded-xl text-xs font-black transition-all bg-indigo-600 text-white shadow-lg">لوحة المزامنة</button>
-                <button onclick="switchTab('match')" id="tabBtnMatch" class="px-6 py-2 rounded-xl text-xs font-black transition-all text-slate-400 hover:text-white">شاشة المطابقة</button>
-            </div>
-        </header>
-
-        <section id="syncSection" class="no-print">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                <div class="md:col-span-3 glass p-6 rounded-[2rem] shadow-sm border border-slate-200">
-                    <div class="relative">
-                        <input type="text" id="mainSearch" oninput="filterClients()" placeholder="ابحث عن صيدلية، مذخر، أو محافظة (بغداد، البصرة...)" class="w-full bg-slate-100 border-none rounded-2xl p-4 text-sm font-bold focus:ring-2 focus:ring-indigo-500 outline-none pr-12">
-                        <span class="absolute right-4 top-4 text-slate-400 text-xl">🔍</span>
-                    </div>
+                <div class="text-left font-mono text-xs text-slate-500">
+                    <p>DATE: <span id="currentDate">--/--/----</span></p>
+                    <p>REF: PURE-2026-X</p>
                 </div>
-                <div class="glass p-6 rounded-[2rem] shadow-sm border border-slate-200 flex items-center justify-around text-center">
-                    <div><span class="block text-[10px] font-black text-slate-400 uppercase">مكتمل</span><span id="stat-ok" class="text-emerald-600 font-black text-xl font-mono">0</span></div>
-                    <div class="h-8 w-px bg-slate-200"></div>
-                    <div><span class="block text-[10px] font-black text-slate-400 uppercase">تنبيه</span><span id="stat-err" class="text-red-500 font-black text-xl font-mono">0</span></div>
-                </div>
-            </div>
-
-            <div class="bg-white rounded-[2.5rem] shadow-xl border border-slate-100 overflow-hidden">
-                <table class="w-full text-right">
-                    <thead class="bg-slate-50 border-b border-slate-100 font-black text-[11px] text-slate-400 uppercase">
-                        <tr>
-                            <th class="p-6">الجهة المستهدفة</th>
-                            <th class="p-6">الموقع</th>
-                            <th class="p-6">آخر تحديث للأصيل</th>
-                            <th class="p-6 text-center">الحالة</th>
-                            <th class="p-6 text-center">إجراء</th>
-                        </tr>
-                    </thead>
-                    <tbody id="syncTableBody" class="divide-y divide-slate-50 text-sm font-bold text-slate-700">
-                        </tbody>
-                </table>
-            </div>
-        </section>
-
-        <section id="matchSection" class="hidden">
-            <div class="no-print grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                <div class="bg-slate-800 p-4 rounded-[2rem] flex gap-2">
-                    <button onclick="document.getElementById('fileInp').click()" class="flex-1 bg-indigo-600 text-white p-3 rounded-xl text-[10px] font-black hover:bg-indigo-700">رفع ملف (PDF/XLS)</button>
-                    <button onclick="document.getElementById('imgInp').click()" class="flex-1 bg-sky-600 text-white p-3 rounded-xl text-[10px] font-black hover:bg-sky-700">تصوير (OCR)</button>
-                </div>
-                <button onclick="window.print()" class="bg-emerald-600 text-white p-4 rounded-[2rem] text-xs font-black shadow-lg shadow-emerald-500/20">إصدار التقرير النهائي للطباعة 🖨️</button>
-                <button onclick="switchTab('sync')" class="bg-slate-200 text-slate-700 p-4 rounded-[2rem] text-xs font-black">العودة للبحث ⬅</button>
-                
-                <input type="file" id="fileInp" class="hidden" accept=".pdf, .xlsx, .xls">
-                <input type="file" id="imgInp" class="hidden" accept="image/*">
-            </div>
-
-            <div class="bg-white p-10 rounded-[3rem] shadow-2xl border border-slate-200 print:shadow-none print:border-none">
-                <div class="flex justify-between border-b-4 border-slate-900 pb-6 mb-8">
-                    <div><h1 class="text-3xl font-black text-slate-900">مكتب بيور العلمي</h1><p class="text-xs font-bold text-slate-400 uppercase">Pure Scientific Bureau</p></div>
-                    <div class="text-left font-mono font-bold text-xs"><p>Date: <span id="outDate">--/--/--</span></p><p id="outLoc">Location: --</p></div>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-                    <div class="bg-slate-900 text-white p-6 rounded-3xl shadow-inner">
-                        <span class="text-[10px] text-indigo-400 font-black uppercase">Customer Name:</span>
-                        <input type="text" id="clientNameInp" class="w-full bg-transparent border-none text-2xl font-black outline-none mt-2" placeholder="اسم الصيدلية...">
-                    </div>
-                    <div class="bg-slate-50 p-6 rounded-3xl border border-slate-200 flex flex-col justify-center">
-                        <span class="text-[10px] text-slate-400 font-black uppercase">Discount Rate:</span>
-                        <select id="discPerc" onchange="calculate()" class="text-2xl font-black text-emerald-600 bg-transparent outline-none cursor-pointer">
-                            <option value="0">0% خصم</option><option value="5">5% خصم</option><option value="10">10% خصم</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div id="billsArea" class="space-y-3 min-h-[200px]">
-                    </div>
-
-                <div class="mt-12 pt-8 border-t-2 border-slate-100 flex flex-col md:flex-row justify-between items-end gap-6">
-                    <div class="space-y-2">
-                        <p class="text-xs font-black text-slate-400">Total Calculation:</p>
-                        <p id="subTotalOut" class="text-2xl font-black text-slate-400 line-through decoration-red-400">0 IQD</p>
-                        <div class="bg-indigo-600 p-6 rounded-[2rem] text-white shadow-xl shadow-indigo-600/30">
-                            <span class="text-[10px] font-black opacity-70 uppercase tracking-widest">Final Amount Due:</span>
-                            <p id="finalTotalOut" class="text-4xl font-black font-mono">0 IQD</p>
-                        </div>
-                    </div>
-                    <div class="flex gap-4">
-                        <div class="text-center"><div class="w-24 h-16 border-2 border-dashed border-slate-200 rounded-xl mb-1 bg-slate-50"></div><span class="text-[9px] font-black text-slate-400 uppercase">Accounts Dept</span></div>
-                        <div class="text-center"><div class="w-24 h-16 border-2 border-dashed border-slate-200 rounded-xl mb-1 bg-slate-50"></div><span class="text-[9px] font-black text-slate-400 uppercase">Customer Stamp</span></div>
-                    </div>
-                </div>
-            </div>
-        </section>
-    </div>
-
-    <script>
-        // داتا تجريبية تحاكي المزامنة مع الأصيل
-        let dbClients = [
-            { name: "مذخر بغداد الدولي", prov: "بغداد", city: "الكرخ", status: "ok", lastSync: "2026/04/02 09:00" },
-            { name: "صيدلية النهرين", prov: "صلاح الدين", city: "تكريت", status: "err", lastSync: "2026/04/01 14:00" },
-            { name: "مكتب بيور البصرة", prov: "البصرة", city: "المركز", status: "ok", lastSync: "2026-04-02 08:30" },
-            { name: "صيدلية الحياة", prov: "نينوى", city: "الموصل", status: "ok", lastSync: "2026-03-30 10:00" },
-            { name: "مذخر الشفاء الحديث", prov: "بغداد", city: "الرصافة", status: "ok", lastSync: "2026-04-02 10:15" }
-        ];
-
-        let extractedBills = [];
-
-        function initSystem() {
-            renderSyncTable(dbClients);
-            document.getElementById('outDate').innerText = new Date().toLocaleDateString('ar-IQ');
-        }
-
-        function switchTab(tab) {
-            const isSync = tab === 'sync';
-            document.getElementById('syncSection').classList.toggle('hidden', !isSync);
-            document.getElementById('matchSection').classList.toggle('hidden', isSync);
-            
-            document.getElementById('tabBtnSync').className = isSync ? "px-6 py-2 rounded-xl text-xs font-black bg-indigo-600 text-white shadow-lg" : "px-6 py-2 rounded-xl text-xs font-black text-slate-400 hover:text-white";
-            document.getElementById('tabBtnMatch').className = !isSync ? "px-6 py-2 rounded-xl text-xs font-black bg-indigo-600 text-white shadow-lg" : "px-6 py-2 rounded-xl text-xs font-black text-slate-400 hover:text-white";
-        }
-
-        function renderSyncTable(data) {
-            const body = document.getElementById('syncTableBody');
-            body.innerHTML = "";
-            let stats = { ok: 0, err: 0 };
-
-            data.forEach(c => {
-                const badge = c.status === 'ok' ? 'status-ok' : 'status-err';
-                const statusTxt = c.status === 'ok' ? 'مُزامن ✅' : 'خطأ ربط ⚠️';
-                if(c.status==='ok') stats.ok++; else stats.err++;
-
-                body.innerHTML += `
-                    <tr class="hover:bg-slate-50 transition-colors">
-                        <td class="p-6">${c.name}</td>
-                        <td class="p-6 text-slate-400 text-xs">${c.prov} - ${c.city}</td>
-                        <td class="p-6 font-mono text-[10px]">${c.lastSync}</td>
-                        <td class="p-6 text-center"><span class="sync-badge ${badge}">${statusTxt}</span></td>
-                        <td class="p-6 text-center"><button onclick="startMatch('${c.name}', '${c.prov}/${c.city}')" class="text-indigo-600 hover:underline">مطابقة ↗</button></td>
-                    </tr>
-                `;
-            });
-            document.getElementById('stat-ok').innerText = stats.ok;
-            document.getElementById('stat-err').innerText = stats.err;
-        }
-
-        function filterClients() {
-            const key = document.getElementById('mainSearch').value.toLowerCase();
-            const filtered = dbClients.filter(c => c.name.toLowerCase().includes(key) || c.prov.includes(key));
-            renderSyncTable(filtered);
-        }
-
-        function startMatch(name, loc) {
-            document.getElementById('clientNameInp').value = name;
-            document.getElementById('outLoc').innerText = "Location: " + loc;
-            switchTab('match');
-        }
-
-        // --- محرك الاستخراج والمطابقة ---
-        document.getElementById('fileInp').onchange = (e) => {
-            const file = e.target.files[0]; if(!file) return;
-            showLoader("جاري معالجة الملف واستخراج المبالغ...");
-            setTimeout(() => {
-                extractedBills = [
-                    { id: "10552", date: "2026/03/10", amount: 1250000, active: true },
-                    { id: "10680", date: "2026/03/25", amount: 450000, active: true }
-                ];
-                hideLoader(); renderBills();
-            }, 1200);
-        };
-
-        document.getElementById('imgInp').onchange = async (e) => {
-            const file = e.target.files[0]; if(!file) return;
-            showLoader("جاري قراءة الوصل بالذكاء الاصطناعي (OCR)...");
-            const worker = await Tesseract.createWorker('ara+eng');
-            const { data: { text } } = await worker.recognize(file);
-            await worker.terminate();
-            extractedBills.push({ id: "IMG-"+Math.floor(Math.random()*99), date: "وصل ورقي", amount: 500000, active: true });
-            hideLoader(); renderBills();
-        };
-
-        function renderBills() {
-            const area = document.getElementById('billsArea');
-            area.innerHTML = extractedBills.length === 0 ? `<p class="text-center text-slate-300 p-10 border-2 border-dashed rounded-3xl">لا توجد بيانات مستخرجة بعد...</p>` : "";
-            extractedBills.forEach((b, i) => {
-                area.innerHTML += `
-                    <div class="p-5 rounded-2xl border-r-8 ${b.active ? 'border-emerald-500 bg-emerald-50' : 'border-slate-300 bg-white'} shadow-sm flex justify-between items-center transition-all">
-                        <div class="flex items-center gap-4 cursor-pointer" onclick="toggleBill(${i})">
-                            <span class="text-xl">${b.active ? '✅' : '⚪'}</span>
-                            <div><p class="font-black text-slate-800">${b.amount.toLocaleString()} IQD</p><p class="text-[9px] font-bold text-slate-400 font-mono">BILL #${b.id} | ${b.date}</p></div>
-                        </div>
-                        <button onclick="removeBill(${i})" class="text-red-300 hover:text-red-600 font-black text-[10px]">حذف</button>
-                    </div>
-                `;
-            });
-            calculate();
-        }
-
-        function calculate() {
-            let sub = 0;
-            extractedBills.forEach(b => { if(b.active) sub += b.amount; });
-            const disc = parseInt(document.getElementById('discPerc').value);
-            const final = sub - (sub * (disc/100));
-            document.getElementById('subTotalOut').innerText = sub.toLocaleString() + " IQD";
-            document.getElementById('finalTotalOut').innerText = final.toLocaleString() + " IQD";
-        }
-
-        function toggleBill(i) { extractedBills[i].active = !extractedBills[i].active; renderBills(); }
-        function removeBill(i) { extractedBills.splice(i, 1); renderBills(); }
-        function showLoader(txt) { document.getElementById('loaderText').innerText = txt; document.getElementById('loader').style.display = 'flex'; }
-        function hideLoader() { document.getElementById('loader').style.display = 'none'; }
-    </script>
-</body>
-</html>

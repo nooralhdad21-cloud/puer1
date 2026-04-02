@@ -1,0 +1,114 @@
+/* إعدادات الخطوط والأساسيات */
+:root {
+    --primary: #4f46e5;
+    --primary-hover: #4338ca;
+    --bg-main: #f8fafc;
+    --card-bg: #ffffff;
+    --text-main: #0f172a;
+    --text-muted: #64748b;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    scroll-behavior: smooth;
+}
+
+body {
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    line-height: 1.6;
+    overflow-x: hidden;
+}
+
+/* تأثيرات الهيدر */
+header {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    position: relative;
+}
+
+header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -10%;
+    width: 400px;
+    height: 400px;
+    background: rgba(79, 70, 229, 0.1);
+    filter: blur(100px);
+    border-radius: 50%;
+}
+
+/* بطاقات الصيدليات */
+.pharmacy-card {
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.pharmacy-card:hover {
+    transform: translateY(-10px);
+}
+
+/* تأثير الخط المشطوب عند التسديد */
+.row-checked {
+    background-color: #f0fdf4 !important;
+    opacity: 0.6;
+    text-decoration: line-through;
+    color: #166534;
+}
+
+/* نافذة التفاصيل (Modal) */
+#modalOverlay {
+    backdrop-filter: blur(12px);
+    transition: all 0.4s ease;
+}
+
+.modal-active {
+    opacity: 1 !important;
+    pointer-events: auto !important;
+}
+
+/* تخصيص الجدول */
+table {
+    border-collapse: separate;
+    border-spacing: 0 8px;
+}
+
+thead th {
+    letter-spacing: 1px;
+}
+
+tbody tr {
+    background: white;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+}
+
+/* الأنيميشن عند الرفع */
+@keyframes pulse-custom {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.7; transform: scale(0.95); }
+}
+
+.animate-pulse {
+    animation: pulse-custom 2s infinite;
+}
+
+/* إعدادات الطباعة */
+@media print {
+    .no-print {
+        display: none !important;
+    }
+    
+    body {
+        background: white;
+    }
+
+    #modalOverlay {
+        position: relative !important;
+        background: white !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
+    }
+
+    .bg-slate-900 {
+        background: #f1f5

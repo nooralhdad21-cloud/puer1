@@ -12,7 +12,7 @@
     <style>
         body { font-family: 'Cairo', sans-serif; background-color: #f1f5f9; overflow-x: hidden; }
         
-        /* تأثيرات القائمة والتنقل */
+        /* إعدادات القائمة والتنقل */
         .sidebar { transition: all 0.3s ease; }
         .nav-item { transition: all 0.2s; cursor: pointer; }
         .nav-item:hover, .nav-item.active { background-color: #3b82f6; color: white; padding-right: 1.5rem; }
@@ -21,17 +21,18 @@
         .stat-card { transition: transform 0.3s ease, box-shadow 0.3s ease; }
         .stat-card:hover { transform: translateY(-5px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
         
-        /* مكونات المطابقة (من الأكواد السابقة) */
-        .bill-card { display: flex; flex-direction: column; padding: 12px 18px; background: white; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 8px; transition: 0.3s; }
-        .is-active { border-right: 6px solid #10b981; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .not-active { border-right: 6px solid #ef4444; background-color: #fef2f2; opacity: 0.7; }
-        .note-input { width: 100%; margin-top: 10px; border: 1px dashed #cbd5e1; border-radius: 8px; padding: 6px 12px; font-size: 11px; outline: none; }
-        #dropZone.dragover { border-color: #4f46e5; background-color: #e0e7ff; scale: 1.01; }
-        
         /* إخفاء الأقسام غير النشطة */
         .view-section { display: none; animation: fadeIn 0.4s ease; }
         .view-section.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* تنسيقات كلاس المطابقة (.matching-section) */
+        .matching-section .bill-card { display: flex; flex-direction: column; padding: 12px 18px; background: white; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 8px; transition: 0.3s; }
+        .matching-section .is-active { border-right: 6px solid #10b981; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .matching-section .not-active { border-right: 6px solid #ef4444; background-color: #fef2f2; opacity: 0.7; }
+        .matching-section .note-input { width: 100%; margin-top: 10px; border: 1px dashed #cbd5e1; border-radius: 8px; padding: 6px 12px; font-size: 11px; outline: none; }
+        .matching-section .drop-zone { border: 2px dashed #93c5fd; background-color: #eff6ff; border-radius: 1rem; padding: 1.5rem; transition: all 0.3s; cursor: pointer; text-align: center; }
+        .matching-section .drop-zone.dragover { border-color: #4f46e5; background-color: #e0e7ff; transform: scale(1.01); }
 
         /* إعدادات الطباعة الدقيقة */
         @media print { 
@@ -39,7 +40,7 @@
             body { background-color: white !important; }
             .no-print, .sidebar { display: none !important; } 
             .main-content { margin: 0 !important; padding: 0 !important; width: 100% !important; }
-            #view-matching { display: block !important; zoom: 85%; } /* طباعة صفحة المطابقة فقط */
+            #view-matching { display: block !important; zoom: 85%; } 
             .report-container { border: none !important; box-shadow: none !important; margin: 0 !important; }
             .view-section:not(#view-matching) { display: none !important; }
         }
@@ -88,16 +89,16 @@
             <i class="fa-solid fa-bars"></i>
         </button>
 
-        <div id="view-dashboard" class="view-section active p-6 md:p-10">
+        <div id="view-dashboard" class="view-section dashboard-section active p-6 md:p-10">
             <div class="mb-8">
-                <h1 class="text-3xl font-black text-slate-800">مرحباً بك في لوحة القيادة</h1>
-                <p class="text-slate-500 text-sm mt-1 font-bold">ملخص سريع لنشاطات مكتب بيور العلمي</p>
+                <h1 class="text-3xl font-black text-slate-800">لوحة القيادة</h1>
+                <p class="text-slate-500 text-sm mt-1 font-bold">ملخص نشاطات مكتب بيور العلمي</p>
             </div>
             
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <div class="stat-card bg-white p-6 rounded-2xl shadow-sm border border-slate-100 border-r-4 border-r-blue-500 flex items-center justify-between">
                     <div>
-                        <p class="text-xs font-bold text-slate-400 uppercase">إجمالي المطابقات المحفوظة</p>
+                        <p class="text-xs font-bold text-slate-400 uppercase">المطابقات المحفوظة</p>
                         <h3 class="text-3xl font-black text-slate-800 mt-1" id="dash-total-matches">0</h3>
                     </div>
                     <div class="w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center text-blue-500 text-xl"><i class="fa-solid fa-file-check"></i></div>
@@ -126,7 +127,7 @@
             </div>
         </div>
 
-        <div id="view-matching" class="view-section p-4 md:p-8">
+        <div id="view-matching" class="view-section matching-section p-4 md:p-8">
             <div class="max-w-5xl mx-auto">
                 <header class="no-print bg-white p-6 rounded-3xl mb-6 shadow-sm border border-slate-200">
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
@@ -136,4 +137,501 @@
                             <select id="provInput" onchange="updateCities(); sync();" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs font-bold"></select></div>
                         <div><label class="block text-[10px] mb-1 text-slate-500 font-bold">القضاء / الناحية</label>
                             <select id="cityInput" onchange="sync()" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs font-bold"></select></div>
-                        <div><label class="block text-
+                        <div><label class="block text-[10px] mb-1 text-slate-500 font-bold">المندوب</label>
+                            <input type="text" id="repInput" oninput="sync()" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs"></div>
+                    </div>
+
+                    <div id="dropZone" class="drop-zone mb-4">
+                        <input type="file" id="pdfFile" class="hidden" accept=".pdf" multiple>
+                        <div id="uploadUi" class="text-blue-600">
+                            <i class="fa-solid fa-cloud-arrow-up text-3xl mb-2"></i>
+                            <p class="text-xs font-black">اسحب كشوفات PDF هنا أو اضغط للرفع</p>
+                        </div>
+                        <div id="progressCont" class="hidden w-full mt-3">
+                            <div class="w-full bg-blue-200 h-2 rounded-full overflow-hidden">
+                                <div id="progressBar" class="bg-blue-600 h-full w-0 transition-all"></div>
+                            </div>
+                            <p id="progressTxt" class="text-[10px] font-bold text-blue-600 mt-1">جاري المعالجة...</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 md:grid-cols-6 gap-3 border-t border-slate-100 pt-4 items-end">
+                        <div><label class="block text-[9px] mb-1 text-orange-500 font-bold">المبلغ السابق (IQD)</label>
+                            <input type="text" id="prevInput" oninput="sync()" class="w-full border border-slate-200 rounded-lg p-2 text-xs font-mono"></div>
+                        <div><label class="block text-[9px] mb-1 text-orange-500 font-bold">النسبة السابقة</label>
+                            <select id="prevDiscInput" onchange="sync()" class="w-full border border-slate-200 rounded-lg p-2 text-xs font-bold"></select></div>
+                        <div><label class="block text-[9px] mb-1 text-slate-500 font-bold">تاريخ المطابقة</label>
+                            <input type="date" id="matchDateInput" oninput="sync()" class="w-full border border-slate-200 rounded-lg p-2 text-xs"></div>
+                        <div><label class="block text-[9px] mb-1 text-red-500 font-bold">آخر مطابقة</label>
+                            <input type="date" id="lastMatchInput" oninput="sync()" class="w-full border border-red-200 bg-red-50 rounded-lg p-2 text-xs"></div>
+                        <div><label class="block text-[9px] mb-1 text-emerald-600 font-bold">خصم المطابقة %</label>
+                            <select id="currDiscPerc" onchange="calculate()" class="w-full border border-emerald-200 bg-emerald-50 text-emerald-700 rounded-lg p-2 text-xs font-bold"></select></div>
+                        <div><label class="block text-[9px] mb-1 text-purple-600 font-bold">مطابقة ميدانية (IQD)</label>
+                            <input type="text" id="fieldMatchInput" oninput="calculate()" placeholder="أدخل المبلغ..." class="w-full border border-purple-200 bg-purple-50 text-purple-700 rounded-lg p-2 text-xs font-mono focus:ring-2 focus:ring-purple-400 outline-none"></div>
+                    </div>
+                </header>
+
+                <div class="no-print flex gap-3 mb-6">
+                    <button onclick="saveToArchive()" class="flex-1 bg-slate-900 hover:bg-slate-800 text-white py-3 rounded-xl text-xs font-black transition-all shadow-md"><i class="fa-solid fa-save ml-1"></i> حفظ بالأرشيف</button>
+                    <button onclick="window.print()" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl text-xs font-black transition-all shadow-md"><i class="fa-solid fa-print ml-1"></i> طباعة التقرير</button>
+                    <button onclick="shareWhatsApp()" class="flex-1 bg-green-500 hover:bg-green-600 text-white py-3 rounded-xl text-xs font-black transition-all shadow-md"><i class="fa-brands fa-whatsapp ml-1"></i> واتساب</button>
+                    <button onclick="location.reload()" class="bg-red-100 text-red-600 hover:bg-red-200 px-4 rounded-xl text-[11px] font-bold transition-all"><i class="fa-solid fa-rotate-right"></i></button>
+                </div>
+
+                <div class="bg-white p-8 md:p-12 rounded-[2rem] report-container min-h-[800px] flex flex-col border border-slate-200 shadow-xl">
+                    <div class="flex justify-between items-start border-b-4 border-slate-900 pb-6 mb-8">
+                        <div>
+                            <h1 class="text-3xl font-black text-slate-900 uppercase">مكتب بيور العلمي</h1>
+                            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1">Scientific Bureau For Trading</p>
+                        </div>
+                        <div class="text-left text-[11px] font-bold space-y-1">
+                            <p>الموقع: <span id="outLoc" class="text-blue-600 font-black">..</span></p>
+                            <p>التاريخ: <span id="outDate" class="font-mono">..</span></p>
+                            <p class="text-red-600">آخر مطابقة: <span id="outLastMatch" class="font-mono">..</span></p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-4 gap-2 mb-6 text-center">
+                        <div class="bg-slate-50 p-3 rounded-xl border border-slate-100"><span class="block text-[7px] text-slate-400 font-black mb-1 uppercase">PREV AMOUNT</span><span id="outPrevAmt" class="text-[11px] font-black italic text-slate-700">0</span></div>
+                        <div class="bg-slate-50 p-3 rounded-xl border border-slate-100"><span class="block text-[7px] text-slate-400 font-black mb-1 uppercase">ACCOUNTANT</span><span id="outMyName" class="text-[11px] font-black italic text-slate-700">..</span></div>
+                        <div class="bg-slate-50 p-3 rounded-xl border border-slate-100"><span class="block text-[7px] text-slate-400 font-black mb-1 uppercase">REPRESENTATIVE</span><span id="outRep" class="text-[11px] font-black italic text-slate-700">..</span></div>
+                        <div class="bg-slate-50 p-3 rounded-xl border border-slate-100"><span class="block text-[7px] font-black mb-1 uppercase text-emerald-500">MATCH DISC</span><span id="outCurrDisc" class="text-[11px] font-black italic text-emerald-600">0%</span></div>
+                    </div>
+
+                    <div class="mb-6 p-6 bg-slate-900 rounded-2xl text-white flex justify-between items-center shadow-md">
+                        <div class="flex-1 text-right">
+                            <p class="text-[9px] font-black text-blue-400 mb-1 italic uppercase">اسم العميل / الصيدلية</p>
+                            <input type="text" id="outClient" placeholder="اكتب اسم العميل..." class="text-2xl font-black bg-transparent border-none outline-none w-full placeholder-slate-600">
+                        </div>
+                        <div class="text-left border-r border-slate-700 pl-4 pr-6">
+                            <p class="text-[8px] font-black text-slate-500 mb-1 uppercase">Sub-Total:</p>
+                            <p id="outFullOrig" class="text-lg font-black text-slate-300 font-mono">0.00 IQD</p>
+                        </div>
+                    </div>
+
+                    <div id="matchingMsgBox" class="bg-slate-50 p-4 rounded-xl border border-slate-200 mb-6 shadow-inner">
+                        <div id="officialMsg" class="text-[11px] font-black text-slate-800 text-center">نود إعلامكم بأنه تمت مطابقة الحسابات بنجاح.</div>
+                        <div id="notesSummary" class="mt-3 space-y-1 border-t border-slate-200 pt-3"></div>
+                    </div>
+
+                    <div id="billsList" class="space-y-2 mb-8 no-print"></div>
+
+                    <div class="border-t-2 border-slate-900 pt-6 mt-auto">
+                        <div class="flex justify-between items-end">
+                            <div class="flex-1">
+                                <p class="text-[10px] font-black text-slate-500 mb-1 uppercase">المبلغ الكلي قبل الخصم:</p>
+                                <p id="resTotalDisplay" class="text-2xl font-black text-slate-900 font-mono mb-1">0.00 IQD</p>
+                                <p class="text-[10px] font-bold text-red-500 mb-1">خصم مستقطع: <span id="resDiscAmount" class="font-mono">0.00 IQD</span></p>
+                                <p class="text-[10px] font-bold text-purple-600 mb-4">تم تسديد (مطابقة ميدانية): <span id="outFieldMatch" class="font-mono">0.00 IQD</span></p>
+                                
+                                <div class="bg-blue-50 border-r-4 border-blue-600 p-3 rounded-xl inline-block">
+                                    <p class="text-[9px] font-black text-blue-600 mb-1 uppercase">الصافي النهائي للمطابقة:</p>
+                                    <p id="resFinal" class="text-2xl font-black text-blue-900 font-mono">0.00 IQD</p>
+                                </div>
+                                <div class="block mt-4">
+                                    <p id="tafgeet" class="text-[10px] font-black text-blue-700 bg-white px-4 py-2 rounded-lg border border-blue-100 inline-block shadow-sm"></p>
+                                </div>
+                            </div>
+                            <div class="flex gap-6 items-center">
+                                <div class="text-center">
+                                    <div class="w-24 h-16 border-2 border-dashed border-slate-300 rounded-xl mb-1 bg-slate-50"></div>
+                                    <p class="text-[7px] font-black text-slate-500 uppercase">توقيع المحاسب</p>
+                                </div>
+                                <div class="text-center">
+                                    <div class="w-24 h-16 border-2 border-dashed border-slate-300 rounded-xl mb-1 bg-slate-50"></div>
+                                    <p class="text-[7px] font-black text-slate-500 uppercase">توقيع وختم العميل</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-archive" class="view-section archive-section p-6 md:p-10">
+            <div class="flex justify-between items-end mb-8">
+                <div>
+                    <h1 class="text-3xl font-black text-slate-800">أرشيف المطابقات</h1>
+                    <p class="text-slate-500 text-sm mt-1 font-bold">سجل كامل بجميع العمليات المحفوظة</p>
+                </div>
+                <div class="relative w-72">
+                    <input type="text" id="archiveSearch" oninput="renderArchiveTable()" placeholder="ابحث عن عميل أو تاريخ..." class="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                    <i class="fa-solid fa-search absolute left-3 top-3 text-slate-400"></i>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <table class="w-full text-right border-collapse">
+                    <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 text-xs uppercase">
+                        <tr>
+                            <th class="p-4 font-black">التاريخ</th>
+                            <th class="p-4 font-black">اسم العميل / المذخر</th>
+                            <th class="p-4 font-black">المندوب</th>
+                            <th class="p-4 font-black">الصافي النهائي</th>
+                            <th class="p-4 font-black text-center">إجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="archiveTableBody" class="text-sm font-bold text-slate-700">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="view-reports" class="view-section reports-section p-6 md:p-10">
+            <div class="mb-8">
+                <h1 class="text-3xl font-black text-slate-800">التقارير والإعدادات</h1>
+                <p class="text-slate-500 text-sm mt-1 font-bold">تصدير البيانات وإدارة النظام</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 text-center">
+                    <div class="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center text-green-500 text-2xl mx-auto mb-4"><i class="fa-solid fa-file-excel"></i></div>
+                    <h3 class="text-xl font-black text-slate-800 mb-2">تصدير كشف Excel</h3>
+                    <p class="text-xs text-slate-500 mb-6 leading-relaxed">تصدير بيانات الأرشيف إلى ملف إكسل لسهولة مراجعتها.</p>
+                    <button onclick="exportToExcel()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-xl transition-all shadow-md">تحميل الملف (CSV)</button>
+                </div>
+                
+                <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-200">
+                    <h3 class="text-lg font-black text-slate-800 mb-4 border-b border-slate-100 pb-2"><i class="fa-solid fa-gear text-slate-400 ml-2"></i> إعدادات المندوبين</h3>
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center bg-slate-50 p-3 rounded-lg border border-slate-100">
+                            <span class="font-bold text-sm text-slate-700">عاصم (النجف)</span>
+                            <span class="text-xs bg-emerald-100 text-emerald-700 px-2 py-1 rounded-md font-bold">نشط</span>
+                        </div>
+                        <div class="flex justify-between items-center bg-slate-50 p-3 rounded-lg border border-slate-100">
+                            <span class="font-bold text-sm text-slate-700">ساجد (تكريت)</span>
+                            <span class="text-xs bg-emerald-100 text-emerald-700 px-2 py-1 rounded-md font-bold">نشط</span>
+                        </div>
+                        <button class="w-full mt-4 border-2 border-dashed border-slate-300 text-slate-500 font-bold py-2 rounded-xl hover:bg-slate-50 transition-all">+ إضافة مندوب جديد</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // --- 1. المتغيرات والإعدادات العامة ---
+        let db = [];
+        const iraqGeo = {
+            "بغداد": ["الرصافة", "الكرخ", "الأعظمية", "المنصور", "الكرادة", "مدينة الصدر", "الكاظمية"],
+            "صلاح الدين": ["تكريت", "سامراء", "بيجي", "الدور", "الشرقاط", "بلد"],
+            "نينوى": ["الموصل", "تلعفر", "الحمدانية", "سنجار"],
+            "البصرة": ["المركز", "الزبير", "القرنة"],
+            "ذي قار": ["الناصرية", "الشطرة", "الرفاعي"],
+            "بابل": ["الحلة", "المحاويل", "المسيب"],
+            "النجف": ["المركز", "الكوفة", "المناذرة"],
+            "كربلاء": ["المركز", "الهندية"]
+        };
+
+        function initSystem() {
+            const pSel = document.getElementById('provInput');
+            pSel.innerHTML = '<option value="">المحافظة</option>';
+            Object.keys(iraqGeo).sort().forEach(p => pSel.innerHTML += `<option value="${p}">${p}</option>`);
+            
+            const discs = ['prevDiscInput', 'currDiscPerc'];
+            discs.forEach(id => { for(let i=0; i<=15; i++) document.getElementById(id).innerHTML += `<option value="${i}">${i}%</option>`; });
+            
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('matchDateInput').value = today;
+            
+            const savedName = localStorage.getItem('pure_pro_name') || '';
+            document.getElementById('myNameInput').value = savedName;
+            if(savedName) document.getElementById('sidebar-user').innerText = savedName;
+
+            updateCities();
+            initDragAndDrop();
+            updateDashboardStats();
+            sync();
+        }
+
+        // --- 2. التنقل بين الواجهات (Routing) ---
+        function switchView(viewName) {
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            document.getElementById('nav-' + viewName).classList.add('active');
+            
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.getElementById('view-' + viewName).classList.add('active');
+
+            if(viewName === 'dashboard') updateDashboardStats();
+            if(viewName === 'archive') renderArchiveTable();
+        }
+
+        // --- 3. قسم لوحة القيادة ---
+        function updateDashboardStats() {
+            const archive = JSON.parse(localStorage.getItem('pure_archive') || '[]');
+            document.getElementById('dash-total-matches').innerText = archive.length;
+            
+            let totalMoney = 0;
+            const recentDiv = document.getElementById('dash-recent-activity');
+            recentDiv.innerHTML = '';
+
+            archive.reverse().forEach((item, index) => {
+                const val = parseFloat(item.total.replace(/,/g, '').replace('IQD','')) || 0;
+                totalMoney += val;
+                
+                if(index < 3) {
+                    recentDiv.innerHTML += `
+                        <div class="flex justify-between items-center border-b border-slate-50 pb-2">
+                            <div>
+                                <p class="text-sm font-bold text-slate-700">${item.client}</p>
+                                <p class="text-[10px] text-slate-400">${item.date} | بواسطة: ${item.accountant || 'النظام'}</p>
+                            </div>
+                            <p class="text-xs font-black text-emerald-600">${item.total}</p>
+                        </div>`;
+                }
+            });
+
+            if(archive.length === 0) recentDiv.innerHTML = '<p class="text-sm text-slate-500 italic text-center py-2">لا توجد مطابقات محفوظة</p>';
+            document.getElementById('dash-total-money').innerText = totalMoney.toLocaleString() + ' IQD';
+        }
+
+        // --- 4. قسم المطابقة: الرفع والبيانات ---
+        function initDragAndDrop() {
+            const zone = document.getElementById('dropZone');
+            const input = document.getElementById('pdfFile');
+            zone.onclick = () => input.click();
+            zone.ondragover = (e) => { e.preventDefault(); zone.classList.add('dragover'); };
+            zone.ondragleave = () => zone.classList.remove('dragover');
+            zone.ondrop = (e) => { e.preventDefault(); zone.classList.remove('dragover'); handleFiles(e.dataTransfer.files); };
+            input.onchange = (e) => handleFiles(e.target.files);
+        }
+
+        async function handleFiles(files) {
+            if (!files.length) return;
+            const bar = document.getElementById('progressBar');
+            const cont = document.getElementById('progressCont');
+            const txt = document.getElementById('progressTxt');
+            
+            db = [];
+            cont.classList.remove('hidden');
+            const pdfJS = window['pdfjs-dist/build/pdf'];
+            pdfJS.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+
+            for (let i = 0; i < files.length; i++) {
+                bar.style.width = (((i + 1) / files.length) * 100) + '%';
+                txt.innerText = `جاري استخراج البيانات: ${files[i].name}`;
+                const pdf = await pdfJS.getDocument({data: await files[i].arrayBuffer()}).promise;
+                await processPages(pdf);
+            }
+            renderList();
+            setTimeout(() => cont.classList.add('hidden'), 1000);
+        }
+
+        async function processPages(pdf) {
+            for (let i = 1; i <= pdf.numPages; i++) {
+                const page = await pdf.getPage(i);
+                const text = await page.getTextContent();
+                const items = text.items.sort((a,b) => b.transform[5] - a.transform[5]);
+                
+                let client = items.map(it => it.str).find(t => t.includes("مذخر") || t.includes("صيدلية") || t.includes("مكتب")) || "";
+                if(client && !document.getElementById('outClient').value) document.getElementById('outClient').value = client;
+
+                items.forEach(item => {
+                    if (/\d{2}\/\d{2}\/\d{4}/.test(item.str)) {
+                        let row = items.filter(it => Math.abs(it.transform[5] - item.transform[5]) < 5).sort((a,b) => b.transform[4] - a.transform[4]);
+                        const nums = row.filter(r => /[\d,]+\.\d{2}/.test(r.str));
+                        if (nums.length >= 2) {
+                            let id = row.find(ri => /^\d{5,7}$/.test(ri.str))?.str || "000";
+                            db.push({ id, date: item.str, total: nums[0].str, paid: nums.length >= 3 ? nums[1].str : "0.00", remain: nums[nums.length-1].str, status: 'ok', note: '' });
+                        }
+                    }
+                });
+            }
+        }
+
+        // --- 5. قسم المطابقة: العمليات الحسابية ---
+        function updateCities() {
+            const p = document.getElementById('provInput').value;
+            const cSel = document.getElementById('cityInput');
+            cSel.innerHTML = '<option value="">القضاء</option>';
+            if(p && iraqGeo[p]) iraqGeo[p].sort().forEach(c => cSel.innerHTML += `<option value="${c}">${c}</option>`);
+            sync();
+        }
+
+        function sync() {
+            const name = document.getElementById('myNameInput').value || '..';
+            document.getElementById('outMyName').innerText = name;
+            localStorage.setItem('pure_pro_name', name);
+            if(name !== '..') document.getElementById('sidebar-user').innerText = name;
+
+            document.getElementById('outRep').innerText = document.getElementById('repInput').value || '..';
+            document.getElementById('outPrevAmt').innerText = (document.getElementById('prevInput').value || '0') + " IQD";
+            document.getElementById('outCurrDisc').innerText = document.getElementById('currDiscPerc').value + "%";
+            
+            const d = document.getElementById('matchDateInput').value;
+            document.getElementById('outDate').innerText = d ? d.split('-').reverse().join('/') : '..';
+            const ld = document.getElementById('lastMatchInput').value;
+            document.getElementById('outLastMatch').innerText = ld ? ld.split('-').reverse().join('/') : '..';
+            document.getElementById('outLoc').innerText = (document.getElementById('provInput').value || '..') + " / " + (document.getElementById('cityInput').value || '..');
+            calculate();
+        }
+
+        function renderList() {
+            const list = document.getElementById('billsList');
+            list.innerHTML = "";
+            db.forEach((b, i) => {
+                list.innerHTML += `
+                    <div class="bill-card ${b.status === 'ok' ? 'is-active' : 'not-active'}">
+                        <div class="flex justify-between items-center text-right italic">
+                            <div onclick="toggleStatus(${i})" class="flex-1 cursor-pointer">
+                                <span class="font-black text-slate-800 text-sm font-mono">${b.remain} IQD</span>
+                                <div class="flex gap-2 mt-1 italic font-mono text-[9px] text-slate-400">Total: ${b.total} | Paid: ${b.paid}</div>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <div class="border-r border-slate-200 pr-3"><span class="text-[10px] font-black text-slate-900">#${b.id}</span><span class="block text-[7px] font-bold text-slate-400 font-mono">${b.date}</span></div>
+                                <div class="no-print cursor-pointer p-1 text-slate-400 hover:text-orange-500" onclick="showNote(${i})"><i class="fa-solid fa-pen-to-square"></i></div>
+                            </div>
+                        </div>
+                        <input type="text" id="note-${i}" class="note-input no-print ${b.note ? '' : 'hidden'}" placeholder="أضف ملاحظة (مثال: استرجاع، نقليات)..." value="${b.note}" oninput="updateNote(${i}, this.value)">
+                    </div>`;
+            });
+            calculate();
+        }
+
+        function toggleStatus(i) { db[i].status = (db[i].status === 'ok' ? 'none' : 'ok'); renderList(); }
+        function showNote(i) { document.getElementById(`note-${i}`).classList.toggle('hidden'); }
+        function updateNote(i, val) { db[i].note = val; calculate(); }
+
+        function calculate() {
+            let sumRem = 0; let excluded = [];
+            const notesSum = document.getElementById('notesSummary');
+            notesSum.innerHTML = "";
+            
+            db.forEach(b => {
+                const valRem = parseFloat(b.remain.replace(/,/g,'')) || 0;
+                if (b.status === 'ok') sumRem += valRem; else excluded.push(b.id);
+                if(b.note.trim()) notesSum.innerHTML += `<p class="text-[10px] text-blue-700 font-bold bg-white p-2 rounded border border-blue-50 italic">• فاتورة #${b.id}: ${b.note}</p>`;
+            });
+            
+            document.getElementById('officialMsg').innerHTML = excluded.length ? `تمت المطابقة بنجاح <span class="text-red-600 font-black underline">باستثناء الفواتير (#${excluded.join(', #')})</span>.` : "نود إعلامكم بأنه تمت مطابقة الحسابات بنجاح.";
+            
+            // حساب الخصم
+            const disc = parseFloat(document.getElementById('currDiscPerc').value) || 0;
+            const dAmt = sumRem * (disc / 100); 
+            let final = sumRem - dAmt;
+
+            // حساب المطابقة الميدانية (طرح المبلغ المُسدد ميدانياً من الصافي)
+            const fieldMatchRaw = document.getElementById('fieldMatchInput').value;
+            const fieldMatchVal = parseFloat(fieldMatchRaw.replace(/,/g,'')) || 0;
+            final = final - fieldMatchVal;
+            
+            // تحديث العرض
+            document.getElementById('outFullOrig').innerText = sumRem.toLocaleString(undefined, {minimumFractionDigits:2}) + " IQD";
+            document.getElementById('resTotalDisplay').innerText = sumRem.toLocaleString(undefined, {minimumFractionDigits:2}) + " IQD";
+            document.getElementById('resDiscAmount').innerText = "- " + dAmt.toLocaleString(undefined, {minimumFractionDigits:2}) + " IQD";
+            document.getElementById('outFieldMatch').innerText = "- " + fieldMatchVal.toLocaleString(undefined, {minimumFractionDigits:2}) + " IQD";
+            document.getElementById('resFinal').innerText = final.toLocaleString(undefined, {minimumFractionDigits:2}) + " IQD";
+            
+            document.getElementById('tafgeet').innerText = tafgeet(final);
+        }
+
+        function tafgeet(num) {
+            if (num <= 0) return "صفر دينار (تم التسديد بالكامل)";
+            const ones = ["", "واحد", "اثنان", "ثلاثة", "أربعة", "خمسة", "ستة", "سبعة", "ثمانية", "تسعة", "عشرة", "أحد عشر", "اثنا عشر", "ثلاثة عشر", "أربعة عشر", "خمسة عشر", "ستة عشر", "سبعة عشر", "ثمانية عشر", "تسعة عشر"];
+            const tens = ["", "", "عشرون", "ثلاثون", "أربعون", "خمسون", "ستون", "سبعون", "ثمانون", "تسعون"];
+            const hundreds = ["", "مائة", "مائتان", "ثلاثمائة", "أربعمائة", "خمسمائة", "ستمائة", "سبعمائة", "ثمانمائة", "تسمائة"];
+            function convert(n) {
+                if (n < 20) return ones[n];
+                if (n < 100) return tens[Math.floor(n / 10)] + (n % 10 !== 0 ? " و " + ones[n % 10] : "");
+                if (n < 1000) return hundreds[Math.floor(n / 100)] + (n % 100 !== 0 ? " و " + convert(n % 100) : "");
+                if (n < 1000000) return (Math.floor(n / 1000) === 1 ? "ألف" : Math.floor(n / 1000) === 2 ? "ألفان" : convert(Math.floor(n / 1000)) + " آلاف") + (n % 1000 !== 0 ? " و " + convert(n % 1000) : "");
+                if (n < 1000000000) return (Math.floor(n / 1000000) === 1 ? "مليون" : Math.floor(n / 1000000) === 2 ? "مليونان" : convert(Math.floor(n / 1000000)) + " ملايين") + (n % 1000000 !== 0 ? " و " + convert(n % 1000000) : "");
+                return n;
+            }
+            return "فقط " + convert(Math.floor(num)) + " دينار عراقي لا غير";
+        }
+
+        // --- 6. قسم الأرشيف ---
+        function saveToArchive() {
+            const client = document.getElementById('outClient').value;
+            if(!client || !db.length) return alert("الرجاء إدخال كشف الحساب واسم العميل أولاً.");
+            
+            let archive = JSON.parse(localStorage.getItem('pure_archive') || '[]');
+            const entry = {
+                id: Date.now(),
+                client: client,
+                rep: document.getElementById('repInput').value || '-',
+                accountant: document.getElementById('myNameInput').value || '-',
+                date: document.getElementById('matchDateInput').value,
+                total: document.getElementById('resFinal').innerText
+            };
+            archive.push(entry);
+            localStorage.setItem('pure_archive', JSON.stringify(archive));
+            alert("تم حفظ المطابقة بنجاح في الأرشيف!");
+            updateDashboardStats();
+        }
+
+        function renderArchiveTable() {
+            const query = document.getElementById('archiveSearch').value.toLowerCase();
+            const tbody = document.getElementById('archiveTableBody');
+            let archive = JSON.parse(localStorage.getItem('pure_archive') || '[]');
+            
+            archive.sort((a,b) => b.id - a.id);
+            if(query) archive = archive.filter(a => a.client.toLowerCase().includes(query) || a.date.includes(query) || a.rep.toLowerCase().includes(query));
+
+            tbody.innerHTML = archive.map(a => `
+                <tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                    <td class="p-4 text-slate-500 font-mono">${a.date}</td>
+                    <td class="p-4 font-black text-blue-600">${a.client}</td>
+                    <td class="p-4 text-slate-500">${a.rep}</td>
+                    <td class="p-4 font-black font-mono">${a.total}</td>
+                    <td class="p-4 text-center">
+                        <button onclick="loadFromArchive('${a.client}')" class="text-blue-500 hover:text-blue-700 bg-blue-50 px-3 py-1 rounded text-xs ml-2"><i class="fa-solid fa-eye"></i></button>
+                        <button onclick="deleteFromArchive(${a.id})" class="text-red-500 hover:text-red-700 bg-red-50 px-3 py-1 rounded text-xs"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+
+            if(archive.length === 0) tbody.innerHTML = '<tr><td colspan="5" class="p-8 text-center text-slate-400">لا توجد بيانات متطابقة</td></tr>';
+        }
+
+        function loadFromArchive(clientName) {
+            document.getElementById('outClient').value = clientName;
+            switchView('matching');
+            alert("تم جلب اسم العميل، يرجى رفع ملف الكشف الخاص به لتحديث الأرقام.");
+        }
+
+        function deleteFromArchive(id) {
+            if(!confirm("هل أنت متأكد من مسح هذا السجل نهائياً؟")) return;
+            let archive = JSON.parse(localStorage.getItem('pure_archive') || '[]');
+            archive = archive.filter(a => a.id !== id);
+            localStorage.setItem('pure_archive', JSON.stringify(archive));
+            renderArchiveTable();
+            updateDashboardStats();
+        }
+
+        // --- 7. التصدير والمشاركة ---
+        function shareWhatsApp() {
+            const client = document.getElementById('outClient').value;
+            const net = document.getElementById('resFinal').innerText;
+            const date = document.getElementById('outDate').innerText;
+            const fieldMatch = document.getElementById('fieldMatchInput').value || "0";
+            if(!client || net === "0.00 IQD") return alert("لا توجد بيانات مكتملة للمشاركة!");
+            const text = `*مكتب بيور العلمي*%0A------------------%0A*العميل:* ${client}%0A*صافي المطابقة:* ${net}%0A*تسديد ميداني:* ${fieldMatch} IQD%0A*التاريخ:* ${date}%0A------------------%0A_تمت المطابقة بنجاح، يرجى المراجعة._`;
+            window.open(`https://wa.me/?text=${text}`, '_blank');
+        }
+
+        function exportToExcel() {
+            const archive = JSON.parse(localStorage.getItem('pure_archive') || '[]');
+            if(archive.length === 0) return alert("الأرشيف فارغ لا يوجد بيانات للتصدير.");
+            
+            let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
+            csvContent += "التاريخ,العميل/المذخر,المندوب,المحاسب,الصافي النهائي\n";
+            
+            archive.forEach(row => {
+                let rClient = row.client.replace(/,/g, " - ");
+                let rTotal = row.total.replace(/,/g, ""); 
+                csvContent += `${row.date},${rClient},${row.rep},${row.accountant},${rTotal}\n`;
+            });
+            
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "Pure_Scientific_Report.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
+</body>
+</html>

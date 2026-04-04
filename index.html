@@ -3,149 +3,162 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-width=1.0">
-    <title>الزعيم اكسبرس للتوصيل السريع</title>
+    <title>لوحة تحكم الإدارة</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
     
     <style>
-        /* إعدادات عامة للصفحة */
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
+        * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             font-family: 'Cairo', sans-serif;
-            background-color: #f4f6f9; /* لون خلفية مريح للعين */
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
+            background-color: #f4f6f9;
             color: #333;
-        }
-
-        /* الحاوية الرئيسية للموقع */
-        .tracking-container {
-            background-color: #ffffff;
-            padding: 50px 40px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-            text-align: center;
-            max-width: 600px;
-            width: 90%;
-        }
-
-        /* مكان الشعار */
-        .logo-area {
-            margin-bottom: 25px;
-        }
-
-        .logo-area img {
-            max-width: 150px;
-            height: auto;
-            /* إذا لم يكن لديك صورة الشعار حالياً، يمكنك ترك هذا فارغاً أو وضع صورة مؤقتة */
-        }
-
-        /* تنسيق النصوص */
-        h1 {
-            font-size: 26px;
-            color: #1a1a1a;
-            margin-bottom: 10px;
-            font-weight: 700;
-        }
-
-        p {
-            font-size: 16px;
-            color: #666;
-            margin-bottom: 35px;
-            font-weight: 600;
-        }
-
-        /* صندوق البحث والأزرار */
-        .search-box {
             display: flex;
-            gap: 15px;
             justify-content: center;
             align-items: center;
+            min-height: 100vh;
         }
 
-        .search-box input {
-            flex: 1;
-            padding: 16px 20px;
-            font-size: 16px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            outline: none;
-            font-family: 'Cairo', sans-serif;
-            transition: all 0.3s ease;
+        /* --- تصميم صفحة تسجيل الدخول --- */
+        #login-section {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
         }
+        #login-section h2 { margin-bottom: 20px; color: #2c3e50; }
+        .input-group { margin-bottom: 15px; text-align: right; }
+        .input-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+        .input-group input {
+            width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-family: inherit;
+        }
+        button.login-btn {
+            width: 100%; padding: 12px; background: #2980b9; color: white; border: none;
+            border-radius: 5px; font-size: 16px; cursor: pointer; font-family: inherit; font-weight: bold;
+        }
+        button.login-btn:hover { background: #2471a3; }
+        .error-msg { color: #e74c3c; margin-top: 10px; display: none; font-size: 14px; }
 
-        /* تأثير عند الضغط على مربع النص */
-        .search-box input:focus {
-            border-color: #d32f2f; /* لون أحمر مقارب للون الهوية البصرية */
-            box-shadow: 0 0 8px rgba(211, 47, 47, 0.2);
+        /* --- تصميم لوحة التحكم (مخفية بالبداية) --- */
+        #admin-dashboard {
+            display: none; /* مخفية حتى يتم تسجيل الدخول */
+            width: 100%;
+            max-width: 1000px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            overflow: hidden;
+            margin: 20px;
         }
-
-        .search-box button {
-            padding: 16px 35px;
-            font-size: 18px;
-            background-color: #d32f2f; /* لون الزر الأحمر */
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-family: 'Cairo', sans-serif;
-            font-weight: 700;
-            transition: background-color 0.3s ease;
+        .header {
+            background: #2c3e50; color: white; padding: 20px; display: flex;
+            justify-content: space-between; align-items: center;
         }
-
-        .search-box button:hover {
-            background-color: #b71c1c; /* لون أغمق عند تمرير الماوس */
+        .header button {
+            background: #e74c3c; color: white; border: none; padding: 8px 15px;
+            border-radius: 5px; cursor: pointer; font-family: inherit;
         }
-
-        /* توافقية مع شاشات الهواتف */
-        @media (max-width: 500px) {
-            .search-box {
-                flex-direction: column;
-            }
-            .search-box button {
-                width: 100%;
-            }
-            .tracking-container {
-                padding: 40px 20px;
-            }
+        .content { padding: 30px; }
+        
+        /* جدول الصلاحيات */
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: right; }
+        th { background-color: #f2f2f2; color: #2c3e50; }
+        .btn-action {
+            padding: 5px 10px; border: none; border-radius: 3px; cursor: pointer; font-family: inherit; color: white;
         }
+        .btn-edit { background: #f39c12; }
+        .btn-delete { background: #e74c3c; }
     </style>
 </head>
 <body>
 
-    <div class="tracking-container">
-        <div class="logo-area">
-            <img src="https://via.placeholder.com/150x150?text=Logo" alt="شعار الزعيم اكسبرس" id="company-logo">
+    <div id="login-section">
+        <h2>تسجيل دخول الإدارة</h2>
+        <div class="input-group">
+            <label>اسم المستخدم:</label>
+            <input type="text" id="username" placeholder="اكتب admin">
         </div>
-        
-        <h1>شركة الزعيم اكسبرس للتوصيل السريع</h1>
-        <p>لتتبع الطرود و الشحنات و معرفة حالة الطلب</p>
-        
-        <div class="search-box">
-            <input type="text" id="trackingInput" placeholder="ادخل رقم التتبع هنا...">
-            <button onclick="searchParcel()">بحث</button>
+        <div class="input-group">
+            <label>كلمة المرور:</label>
+            <input type="password" id="password" placeholder="اكتب 1234">
+        </div>
+        <button class="login-btn" onclick="checkLogin()">دخول</button>
+        <p class="error-msg" id="errorMsg">بيانات الدخول غير صحيحة!</p>
+    </div>
+
+    <div id="admin-dashboard">
+        <div class="header">
+            <h2>لوحة التحكم - إدارة الصلاحيات</h2>
+            <button onclick="logout()">تسجيل خروج</button>
+        </div>
+        <div class="content">
+            <h3>مرحباً بك أيها المدير (Admin)</h3>
+            <p>من هنا يمكنك إدارة مستخدمي الموقع وتعديل صلاحياتهم.</p>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>الرقم</th>
+                        <th>اسم المستخدم</th>
+                        <th>الصلاحية الحالية</th>
+                        <th>الإجراءات (محاكاة)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td>أحمد محمد</td>
+                        <td>مستخدم عادي</td>
+                        <td>
+                            <button class="btn-action btn-edit" onclick="alert('سيتم ترقية المستخدم لاحقاً')">ترقية لمشرف</button>
+                            <button class="btn-action btn-delete" onclick="alert('تم حذف المستخدم (نظرياً)')">حذف</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>علي حسن</td>
+                        <td>مشرف (Moderator)</td>
+                        <td>
+                            <button class="btn-action btn-edit" onclick="alert('سيتم تعديل الصلاحية')">تعديل</button>
+                            <button class="btn-action btn-delete" onclick="alert('تم الحذف')">حذف</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
     </div>
 
     <script>
-        function searchParcel() {
-            // جلب القيمة التي أدخلها المستخدم
-            const trackingNumber = document.getElementById('trackingInput').value;
-            
-            // التحقق مما إذا كان الحقل فارغاً
-            if(trackingNumber.trim() === '') {
-                alert('الرجاء إدخال رقم التتبع أولاً!');
+        // بيانات الدخول الوهمية (لغرض التعليم فقط - غير آمنة إطلاقاً في الواقع)
+        const ADMIN_USER = "admin";
+        const ADMIN_PASS = "1234";
+
+        function checkLogin() {
+            const user = document.getElementById('username').value;
+            const pass = document.getElementById('password').value;
+            const errorElement = document.getElementById('errorMsg');
+
+            if (user === ADMIN_USER && pass === ADMIN_PASS) {
+                // إذا كانت البيانات صحيحة
+                document.getElementById('login-section').style.display = 'none'; // إخفاء الفورم
+                document.getElementById('admin-dashboard').style.display = 'block'; // إظهار لوحة التحكم
+                errorElement.style.display = 'none';
             } else {
-                // محاكاة عملية الاتصال بقاعدة البيانات
-                alert('جاري البحث عن حالة الشحنة رقم: ' + trackingNumber + '\n\n(هنا سيتم ربط الكود بقاعدة البيانات لاحقاً لإظهار النتيجة الحقيقية)');
+                // إذا كانت خاطئة
+                errorElement.style.display = 'block';
             }
+        }
+
+        function logout() {
+            // مسح الحقول وإرجاع واجهة الدخول
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+            
+            document.getElementById('admin-dashboard').style.display = 'none';
+            document.getElementById('login-section').style.display = 'block';
         }
     </script>
 

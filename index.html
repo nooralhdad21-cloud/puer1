@@ -2,165 +2,138 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-width=1.0">
-    <title>لوحة تحكم الإدارة</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام بيور العلمي - الإدارة المتكاملة</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: 'Cairo', sans-serif;
-            background-color: #f4f6f9;
-            color: #333;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
-
-        /* --- تصميم صفحة تسجيل الدخول --- */
-        #login-section {
-            background: white;
-            padding: 40px;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            width: 100%;
-            max-width: 400px;
-            text-align: center;
-        }
-        #login-section h2 { margin-bottom: 20px; color: #2c3e50; }
-        .input-group { margin-bottom: 15px; text-align: right; }
-        .input-group label { display: block; margin-bottom: 5px; font-weight: bold; }
-        .input-group input {
-            width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-family: inherit;
-        }
-        button.login-btn {
-            width: 100%; padding: 12px; background: #2980b9; color: white; border: none;
-            border-radius: 5px; font-size: 16px; cursor: pointer; font-family: inherit; font-weight: bold;
-        }
-        button.login-btn:hover { background: #2471a3; }
-        .error-msg { color: #e74c3c; margin-top: 10px; display: none; font-size: 14px; }
-
-        /* --- تصميم لوحة التحكم (مخفية بالبداية) --- */
-        #admin-dashboard {
-            display: none; /* مخفية حتى يتم تسجيل الدخول */
-            width: 100%;
-            max-width: 1000px;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            overflow: hidden;
-            margin: 20px;
-        }
-        .header {
-            background: #2c3e50; color: white; padding: 20px; display: flex;
-            justify-content: space-between; align-items: center;
-        }
-        .header button {
-            background: #e74c3c; color: white; border: none; padding: 8px 15px;
-            border-radius: 5px; cursor: pointer; font-family: inherit;
-        }
-        .content { padding: 30px; }
+        body { font-family: 'Cairo', sans-serif; background-color: #f1f5f9; overflow-x: hidden; }
         
-        /* جدول الصلاحيات */
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #ddd; padding: 12px; text-align: right; }
-        th { background-color: #f2f2f2; color: #2c3e50; }
-        .btn-action {
-            padding: 5px 10px; border: none; border-radius: 3px; cursor: pointer; font-family: inherit; color: white;
+        /* تأثيرات القائمة والتنقل */
+        .sidebar { transition: all 0.3s ease; }
+        .nav-item { transition: all 0.2s; cursor: pointer; }
+        .nav-item:hover, .nav-item.active { background-color: #3b82f6; color: white; padding-right: 1.5rem; }
+        
+        /* البطاقات وتأثيراتها */
+        .stat-card { transition: transform 0.3s ease, box-shadow 0.3s ease; }
+        .stat-card:hover { transform: translateY(-5px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
+        
+        /* مكونات المطابقة (من الأكواد السابقة) */
+        .bill-card { display: flex; flex-direction: column; padding: 12px 18px; background: white; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 8px; transition: 0.3s; }
+        .is-active { border-right: 6px solid #10b981; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .not-active { border-right: 6px solid #ef4444; background-color: #fef2f2; opacity: 0.7; }
+        .note-input { width: 100%; margin-top: 10px; border: 1px dashed #cbd5e1; border-radius: 8px; padding: 6px 12px; font-size: 11px; outline: none; }
+        #dropZone.dragover { border-color: #4f46e5; background-color: #e0e7ff; scale: 1.01; }
+        
+        /* إخفاء الأقسام غير النشطة */
+        .view-section { display: none; animation: fadeIn 0.4s ease; }
+        .view-section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* إعدادات الطباعة الدقيقة */
+        @media print { 
+            @page { size: A4; margin: 5mm; }
+            body { background-color: white !important; }
+            .no-print, .sidebar { display: none !important; } 
+            .main-content { margin: 0 !important; padding: 0 !important; width: 100% !important; }
+            #view-matching { display: block !important; zoom: 85%; } /* طباعة صفحة المطابقة فقط */
+            .report-container { border: none !important; box-shadow: none !important; margin: 0 !important; }
+            .view-section:not(#view-matching) { display: none !important; }
         }
-        .btn-edit { background: #f39c12; }
-        .btn-delete { background: #e74c3c; }
     </style>
 </head>
-<body>
+<body class="flex h-screen overflow-hidden" onload="initSystem()">
 
-    <div id="login-section">
-        <h2>تسجيل دخول الإدارة</h2>
-        <div class="input-group">
-            <label>اسم المستخدم:</label>
-            <input type="text" id="username" placeholder="اكتب admin">
+    <aside class="sidebar w-64 bg-slate-900 text-slate-300 flex flex-col h-full no-print shadow-2xl z-20 absolute md:relative">
+        <div class="p-6 border-b border-slate-700 text-center">
+            <div class="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-3 shadow-lg">
+                <i class="fa-solid fa-flask text-2xl text-white"></i>
+            </div>
+            <h2 class="text-xl font-black text-white tracking-wider">بيور العلمي</h2>
+            <p class="text-[10px] uppercase tracking-widest text-blue-400 mt-1">Management System</p>
         </div>
-        <div class="input-group">
-            <label>كلمة المرور:</label>
-            <input type="password" id="password" placeholder="اكتب 1234">
+        
+        <nav class="flex-1 py-4 flex flex-col gap-2 px-3">
+            <div onclick="switchView('dashboard')" id="nav-dashboard" class="nav-item active flex items-center gap-3 p-3 rounded-xl font-bold text-sm">
+                <i class="fa-solid fa-chart-pie w-5 text-center"></i> لوحة القيادة
+            </div>
+            <div onclick="switchView('matching')" id="nav-matching" class="nav-item flex items-center gap-3 p-3 rounded-xl font-bold text-sm">
+                <i class="fa-solid fa-file-invoice-dollar w-5 text-center"></i> إنشاء مطابقة جديدة
+            </div>
+            <div onclick="switchView('archive')" id="nav-archive" class="nav-item flex items-center gap-3 p-3 rounded-xl font-bold text-sm">
+                <i class="fa-solid fa-folder-open w-5 text-center"></i> أرشيف المطابقات
+            </div>
+            <div onclick="switchView('reports')" id="nav-reports" class="nav-item flex items-center gap-3 p-3 rounded-xl font-bold text-sm">
+                <i class="fa-solid fa-chart-line w-5 text-center"></i> التقارير والمندوبين
+            </div>
+        </nav>
+        
+        <div class="p-4 border-t border-slate-700">
+            <div class="bg-slate-800 p-3 rounded-xl flex items-center gap-3">
+                <div class="w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center text-white font-bold text-xs"><i class="fa-solid fa-user"></i></div>
+                <div>
+                    <p class="text-xs font-bold text-white" id="sidebar-user">مدير النظام</p>
+                    <p class="text-[9px] text-emerald-400">متصل الآن</p>
+                </div>
+            </div>
         </div>
-        <button class="login-btn" onclick="checkLogin()">دخول</button>
-        <p class="error-msg" id="errorMsg">بيانات الدخول غير صحيحة!</p>
-    </div>
+    </aside>
 
-    <div id="admin-dashboard">
-        <div class="header">
-            <h2>لوحة التحكم - إدارة الصلاحيات</h2>
-            <button onclick="logout()">تسجيل خروج</button>
-        </div>
-        <div class="content">
-            <h3>مرحباً بك أيها المدير (Admin)</h3>
-            <p>من هنا يمكنك إدارة مستخدمي الموقع وتعديل صلاحياتهم.</p>
+    <main class="main-content flex-1 h-full overflow-y-auto bg-slate-50 relative">
+        
+        <button class="md:hidden absolute top-4 right-4 z-30 bg-slate-900 text-white p-2 rounded-lg no-print">
+            <i class="fa-solid fa-bars"></i>
+        </button>
+
+        <div id="view-dashboard" class="view-section active p-6 md:p-10">
+            <div class="mb-8">
+                <h1 class="text-3xl font-black text-slate-800">مرحباً بك في لوحة القيادة</h1>
+                <p class="text-slate-500 text-sm mt-1 font-bold">ملخص سريع لنشاطات مكتب بيور العلمي</p>
+            </div>
             
-            <table>
-                <thead>
-                    <tr>
-                        <th>الرقم</th>
-                        <th>اسم المستخدم</th>
-                        <th>الصلاحية الحالية</th>
-                        <th>الإجراءات (محاكاة)</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>1</td>
-                        <td>أحمد محمد</td>
-                        <td>مستخدم عادي</td>
-                        <td>
-                            <button class="btn-action btn-edit" onclick="alert('سيتم ترقية المستخدم لاحقاً')">ترقية لمشرف</button>
-                            <button class="btn-action btn-delete" onclick="alert('تم حذف المستخدم (نظرياً)')">حذف</button>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>2</td>
-                        <td>علي حسن</td>
-                        <td>مشرف (Moderator)</td>
-                        <td>
-                            <button class="btn-action btn-edit" onclick="alert('سيتم تعديل الصلاحية')">تعديل</button>
-                            <button class="btn-action btn-delete" onclick="alert('تم الحذف')">حذف</button>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="stat-card bg-white p-6 rounded-2xl shadow-sm border border-slate-100 border-r-4 border-r-blue-500 flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-bold text-slate-400 uppercase">إجمالي المطابقات المحفوظة</p>
+                        <h3 class="text-3xl font-black text-slate-800 mt-1" id="dash-total-matches">0</h3>
+                    </div>
+                    <div class="w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center text-blue-500 text-xl"><i class="fa-solid fa-file-check"></i></div>
+                </div>
+                <div class="stat-card bg-white p-6 rounded-2xl shadow-sm border border-slate-100 border-r-4 border-r-emerald-500 flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-bold text-slate-400 uppercase">إجمالي المبالغ المُطابقة</p>
+                        <h3 class="text-xl font-black text-slate-800 mt-1 font-mono" id="dash-total-money">0 IQD</h3>
+                    </div>
+                    <div class="w-12 h-12 bg-emerald-50 rounded-full flex items-center justify-center text-emerald-500 text-xl"><i class="fa-solid fa-money-bill-wave"></i></div>
+                </div>
+                <div class="stat-card bg-white p-6 rounded-2xl shadow-sm border border-slate-100 border-r-4 border-r-orange-500 flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-bold text-slate-400 uppercase">المندوبين النشطين</p>
+                        <h3 class="text-3xl font-black text-slate-800 mt-1">4</h3>
+                    </div>
+                    <div class="w-12 h-12 bg-orange-50 rounded-full flex items-center justify-center text-orange-500 text-xl"><i class="fa-solid fa-users"></i></div>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                <h3 class="text-lg font-black text-slate-800 mb-4">آخر النشاطات</h3>
+                <div id="dash-recent-activity" class="space-y-3">
+                    <p class="text-sm text-slate-500 italic text-center py-4">لا توجد نشاطات حديثة</p>
+                </div>
+            </div>
         </div>
-    </div>
 
-    <script>
-        // بيانات الدخول الوهمية (لغرض التعليم فقط - غير آمنة إطلاقاً في الواقع)
-        const ADMIN_USER = "admin";
-        const ADMIN_PASS = "1234";
-
-        function checkLogin() {
-            const user = document.getElementById('username').value;
-            const pass = document.getElementById('password').value;
-            const errorElement = document.getElementById('errorMsg');
-
-            if (user === ADMIN_USER && pass === ADMIN_PASS) {
-                // إذا كانت البيانات صحيحة
-                document.getElementById('login-section').style.display = 'none'; // إخفاء الفورم
-                document.getElementById('admin-dashboard').style.display = 'block'; // إظهار لوحة التحكم
-                errorElement.style.display = 'none';
-            } else {
-                // إذا كانت خاطئة
-                errorElement.style.display = 'block';
-            }
-        }
-
-        function logout() {
-            // مسح الحقول وإرجاع واجهة الدخول
-            document.getElementById('username').value = '';
-            document.getElementById('password').value = '';
-            
-            document.getElementById('admin-dashboard').style.display = 'none';
-            document.getElementById('login-section').style.display = 'block';
-        }
-    </script>
-
-</body>
-</html>
+        <div id="view-matching" class="view-section p-4 md:p-8">
+            <div class="max-w-5xl mx-auto">
+                <header class="no-print bg-white p-6 rounded-3xl mb-6 shadow-sm border border-slate-200">
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                        <div><label class="block text-[10px] mb-1 text-slate-500 font-bold">المحاسب المسؤول</label>
+                            <input type="text" id="myNameInput" oninput="sync()" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs focus:ring-2 focus:ring-blue-500 outline-none"></div>
+                        <div><label class="block text-[10px] mb-1 text-slate-500 font-bold">المحافظة</label>
+                            <select id="provInput" onchange="updateCities(); sync();" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs font-bold"></select></div>
+                        <div><label class="block text-[10px] mb-1 text-slate-500 font-bold">القضاء / الناحية</label>
+                            <select id="cityInput" onchange="sync()" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs font-bold"></select></div>
+                        <div><label class="block text-

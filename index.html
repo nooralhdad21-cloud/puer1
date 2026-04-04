@@ -2,411 +2,152 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>بيور برو - منصة الأعمال المتكاملة</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-width=1.0">
+    <title>الزعيم اكسبرس للتوصيل السريع</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
     
     <style>
-        body { font-family: 'Cairo', sans-serif; background-color: #0f172a; color: #f8fafc; overflow: hidden; }
-        .glass-panel { background: rgba(30, 41, 59, 0.6); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.05); }
-        .active-link { background: linear-gradient(90deg, #4f46e5 0%, #6366f1 100%); color: white; box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4); border-color: transparent !important; }
-        .screen { display: none; height: calc(100vh - 90px); overflow-y: auto; scrollbar-width: thin; scrollbar-color: #475569 #0f172a; padding-right: 5px; }
-        .screen.active { display: block; animation: fadeUp 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
-        
-        @keyframes fadeUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes slideIn { from { transform: translateX(-100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-        
-        /* الإشعارات */
-        #toast-container { position: fixed; bottom: 20px; left: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
-        .toast { background: #1e293b; border-right: 4px solid #10b981; color: white; padding: 12px 20px; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); animation: slideIn 0.3s ease-out; font-size: 12px; font-weight: bold; }
+        /* إعدادات عامة للصفحة */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
 
-        /* تنسيقات الطباعة */
-        @media print { 
-            .no-print { display: none !important; } 
-            body { background: white !important; color: black !important; overflow: visible; }
-            .print-area { display: block !important; padding: 0; margin: 0; box-shadow: none !important; border: none !important; } 
-            .screen { height: auto !important; overflow: visible !important; }
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: #f4f6f9; /* لون خلفية مريح للعين */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            color: #333;
+        }
+
+        /* الحاوية الرئيسية للموقع */
+        .tracking-container {
+            background-color: #ffffff;
+            padding: 50px 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            text-align: center;
+            max-width: 600px;
+            width: 90%;
+        }
+
+        /* مكان الشعار */
+        .logo-area {
+            margin-bottom: 25px;
+        }
+
+        .logo-area img {
+            max-width: 150px;
+            height: auto;
+            /* إذا لم يكن لديك صورة الشعار حالياً، يمكنك ترك هذا فارغاً أو وضع صورة مؤقتة */
+        }
+
+        /* تنسيق النصوص */
+        h1 {
+            font-size: 26px;
+            color: #1a1a1a;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        p {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 35px;
+            font-weight: 600;
+        }
+
+        /* صندوق البحث والأزرار */
+        .search-box {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .search-box input {
+            flex: 1;
+            padding: 16px 20px;
+            font-size: 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            outline: none;
+            font-family: 'Cairo', sans-serif;
+            transition: all 0.3s ease;
+        }
+
+        /* تأثير عند الضغط على مربع النص */
+        .search-box input:focus {
+            border-color: #d32f2f; /* لون أحمر مقارب للون الهوية البصرية */
+            box-shadow: 0 0 8px rgba(211, 47, 47, 0.2);
+        }
+
+        .search-box button {
+            padding: 16px 35px;
+            font-size: 18px;
+            background-color: #d32f2f; /* لون الزر الأحمر */
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            font-weight: 700;
+            transition: background-color 0.3s ease;
+        }
+
+        .search-box button:hover {
+            background-color: #b71c1c; /* لون أغمق عند تمرير الماوس */
+        }
+
+        /* توافقية مع شاشات الهواتف */
+        @media (max-width: 500px) {
+            .search-box {
+                flex-direction: column;
+            }
+            .search-box button {
+                width: 100%;
+            }
+            .tracking-container {
+                padding: 40px 20px;
+            }
         }
     </style>
 </head>
-<body class="p-0 md:p-4 flex h-screen bg-[#0f172a]">
+<body>
 
-    <aside class="no-print w-20 md:w-64 glass-panel rounded-none md:rounded-[2rem] p-4 md:p-6 flex flex-col gap-6 shadow-2xl transition-all z-20">
-        <div class="text-center mb-4 hidden md:block">
-            <h1 class="text-3xl font-black bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-emerald-400">PURE<span class="text-white">PRO</span></h1>
-            <p class="text-[9px] text-slate-400 uppercase tracking-widest font-bold mt-1">Enterprise Edition</p>
+    <div class="tracking-container">
+        <div class="logo-area">
+            <img src="https://via.placeholder.com/150x150?text=Logo" alt="شعار الزعيم اكسبرس" id="company-logo">
         </div>
-
-        <nav class="flex flex-col gap-3 flex-1">
-            <button onclick="showScreen('home')" id="btn-home" class="nav-btn p-3 md:p-4 rounded-xl text-right text-sm font-bold transition-all flex items-center justify-center md:justify-start gap-3 border border-slate-700/50 hover:bg-slate-800 active-link">
-                <span class="text-xl">📊</span> <span class="hidden md:inline">لوحة القيادة</span>
-            </button>
-            <button onclick="showScreen('matching')" id="btn-matching" class="nav-btn p-3 md:p-4 rounded-xl text-right text-sm font-bold transition-all flex items-center justify-center md:justify-start gap-3 border border-slate-700/50 hover:bg-slate-800">
-                <span class="text-xl">📄</span> <span class="hidden md:inline">المطابقة الذكية</span>
-            </button>
-            <button onclick="showScreen('archive')" id="btn-archive" class="nav-btn p-3 md:p-4 rounded-xl text-right text-sm font-bold transition-all flex items-center justify-center md:justify-start gap-3 border border-slate-700/50 hover:bg-slate-800">
-                <span class="text-xl">🗄️</span> <span class="hidden md:inline">أرشيف العمليات</span>
-            </button>
-            <button onclick="showScreen('bot')" id="btn-bot" class="nav-btn p-3 md:p-4 rounded-xl text-right text-sm font-bold transition-all flex items-center justify-center md:justify-start gap-3 border border-slate-700/50 hover:bg-slate-800">
-                <span class="text-xl">🤖</span> <span class="hidden md:inline">مساعد AI</span>
-            </button>
-        </nav>
-
-        <div class="mt-auto bg-slate-800/80 p-4 rounded-2xl border border-slate-700 hidden md:block">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center font-black">M</div>
-                <div>
-                    <p class="text-[10px] text-slate-400">محاسب النظام</p>
-                    <p class="text-xs font-bold text-white">متصل الآن 🟢</p>
-                </div>
-            </div>
-        </div>
-    </aside>
-
-    <main class="flex-1 flex flex-col px-4 md:px-8 w-full">
         
-        <header class="no-print h-20 flex justify-between items-center border-b border-slate-800 mb-6">
-            <div class="relative w-1/3 min-w-[200px]">
-                <input type="text" placeholder="ابحث عن فاتورة أو عميل..." class="w-full bg-slate-900/50 border border-slate-700 rounded-full py-2 px-6 text-sm text-white outline-none focus:border-indigo-500 transition-all">
-            </div>
-            <div class="flex items-center gap-4">
-                <button class="bg-slate-800 p-2 rounded-full hover:bg-slate-700 transition-all relative">
-                    🔔 <span class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></span>
-                </button>
-                <div class="text-left hidden md:block">
-                    <p class="text-xs font-bold text-slate-300" id="currentDateNav"></p>
-                </div>
-            </div>
-        </header>
-
-        <div class="flex-1 relative">
-            
-            <section id="screen-home" class="screen active">
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-                    <div class="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div class="glass-panel p-6 rounded-3xl relative overflow-hidden group">
-                            <div class="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl group-hover:bg-indigo-500/20 transition-all"></div>
-                            <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">إجمالي المطابقات (الشهر)</h3>
-                            <p class="text-4xl font-black font-mono text-white mb-1">128.5M</p>
-                            <p class="text-[10px] text-emerald-400 font-bold">↑ 12% مقارنة بالشهر السابق</p>
-                        </div>
-                        <div class="glass-panel p-6 rounded-3xl relative overflow-hidden group">
-                            <div class="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-all"></div>
-                            <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">الفواتير المعلقة</h3>
-                            <p class="text-4xl font-black font-mono text-white mb-1">34</p>
-                            <p class="text-[10px] text-orange-400 font-bold">تتطلب مراجعة المندوب</p>
-                        </div>
-                    </div>
-                    
-                    <div class="glass-panel p-6 rounded-3xl">
-                        <h3 class="text-sm font-black mb-4 flex justify-between items-center">نشاط النظام <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span></h3>
-                        <div class="space-y-4">
-                            <div class="flex gap-3 items-start">
-                                <div class="bg-indigo-500/20 p-2 rounded-lg text-indigo-400 text-xs">📄</div>
-                                <div><p class="text-xs font-bold text-slate-200">مطابقة مذخر الحياة</p><p class="text-[9px] text-slate-500">قبل 10 دقائق</p></div>
-                            </div>
-                            <div class="flex gap-3 items-start">
-                                <div class="bg-emerald-500/20 p-2 rounded-lg text-emerald-400 text-xs">✅</div>
-                                <div><p class="text-xs font-bold text-slate-200">تسوية حساب مندوب بغداد</p><p class="text-[9px] text-slate-500">قبل ساعة</p></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="glass-panel p-6 rounded-3xl w-full">
-                    <h3 class="text-sm font-black mb-4">أداء التحصيلات والمطابقات (الأسبوعي)</h3>
-                    <div class="h-64 w-full">
-                        <canvas id="mainChart"></canvas>
-                    </div>
-                </div>
-            </section>
-
-            <section id="screen-matching" class="screen">
-                <div class="max-w-4xl mx-auto">
-                    <div class="glass-panel p-6 rounded-3xl mb-6 flex gap-4 no-print flex-wrap">
-                        <button onclick="document.getElementById('pdfFile').click()" class="bg-indigo-600 hover:bg-indigo-500 px-6 py-3 rounded-xl font-bold text-sm transition-all shadow-lg shadow-indigo-600/30 flex-1 md:flex-none">📥 رفع كشف (PDF)</button>
-                        <button onclick="window.print()" class="bg-emerald-600 hover:bg-emerald-500 px-6 py-3 rounded-xl font-bold text-sm transition-all shadow-lg shadow-emerald-600/30 flex-1 md:flex-none">🖨️ طباعة</button>
-                        <button onclick="saveCurrentMatch()" class="bg-slate-700 hover:bg-slate-600 px-6 py-3 rounded-xl font-bold text-sm transition-all flex-1 md:flex-none">💾 حفظ في الأرشيف</button>
-                        <input type="file" id="pdfFile" class="hidden" accept=".pdf">
-                    </div>
-                    
-                    <div id="matchPaper" class="print-area bg-white text-slate-900 p-8 rounded-[2rem] shadow-xl min-h-[800px] flex flex-col relative overflow-hidden">
-                        <div class="absolute inset-0 flex items-center justify-center opacity-5 pointer-events-none z-0">
-                            <h1 class="text-[150px] font-black transform -rotate-45 text-slate-900">PURE</h1>
-                        </div>
-
-                        <div class="relative z-10">
-                            <div class="flex justify-between items-start border-b-4 border-slate-900 pb-6 mb-8">
-                                <div>
-                                    <h2 class="text-3xl font-black text-slate-900">مكتب بيور العلمي</h2>
-                                    <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Pure Scientific Bureau</p>
-                                </div>
-                                <div class="text-left font-bold text-xs space-y-1">
-                                    <p class="bg-slate-100 px-3 py-1 rounded-md">التاريخ: <span id="matchDateOut" class="font-mono text-indigo-700">--</span></p>
-                                    <p class="bg-slate-100 px-3 py-1 rounded-md">رقم المطابقة: <span class="font-mono text-red-600">#PR-001</span></p>
-                                </div>
-                            </div>
-                            
-                            <input type="text" id="clientNameInput" placeholder="اسم الصيدلية / المذخر..." class="text-2xl font-black w-full mb-6 outline-none bg-slate-50 border border-slate-200 p-4 rounded-xl focus:border-indigo-500 transition-all text-slate-800">
-                            
-                            <div id="billsArea" class="space-y-2 mb-8 no-print">
-                                <div class="text-center text-slate-400 py-16 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50">
-                                    <span class="text-4xl mb-2 block">📄</span>
-                                    <p class="font-bold text-sm">قم برفع كشف حساب بصيغة PDF ليتم تحليل الفواتير تلقائياً</p>
-                                </div>
-                            </div>
-
-                            <div class="mt-auto border-t-4 border-slate-900 pt-8">
-                                <div class="flex justify-between items-end">
-                                    <div>
-                                        <p class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">الصافي النهائي للمطابقة:</p>
-                                        <p id="finalTotalOut" class="text-4xl font-black font-mono text-indigo-900 mb-2">0.00 IQD</p>
-                                        <div class="bg-indigo-50 border-r-4 border-indigo-500 px-4 py-2 rounded-lg inline-block">
-                                            <p id="tafgeetOut" class="text-xs font-bold text-indigo-700 italic">فقط صفر دينار عراقي لا غير</p>
-                                        </div>
-                                    </div>
-                                    <div class="flex gap-8 no-print md:flex">
-                                        <div class="text-center">
-                                            <div class="w-28 h-16 bg-slate-50 border border-slate-200 rounded-xl mb-2"></div>
-                                            <p class="text-[9px] font-bold text-slate-500 uppercase">توقيع المحاسب</p>
-                                        </div>
-                                        <div class="text-center">
-                                            <div class="w-28 h-16 bg-slate-50 border border-slate-200 rounded-xl mb-2"></div>
-                                            <p class="text-[9px] font-bold text-slate-500 uppercase">ختم العميل</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <section id="screen-archive" class="screen">
-                <div class="glass-panel p-8 rounded-[2rem]">
-                    <h2 class="text-2xl font-black mb-6 flex justify-between items-center">
-                        أرشيف المطابقات
-                        <button onclick="clearArchive()" class="text-xs bg-red-500/20 text-red-400 px-4 py-2 rounded-lg hover:bg-red-500/40">مسح الأرشيف</button>
-                    </h2>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-right border-collapse">
-                            <thead>
-                                <tr class="text-slate-400 border-b border-slate-700 text-sm">
-                                    <th class="py-3 px-4">التاريخ</th>
-                                    <th class="py-3 px-4">اسم العميل</th>
-                                    <th class="py-3 px-4">المبلغ الصافي</th>
-                                    <th class="py-3 px-4 text-center">الحالة</th>
-                                </tr>
-                            </thead>
-                            <tbody id="archiveTableBody" class="text-sm font-bold text-slate-200">
-                                </tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
-
-            <section id="screen-bot" class="screen">
-                <div class="max-w-2xl mx-auto h-[600px] flex flex-col glass-panel rounded-[2rem] overflow-hidden border border-indigo-500/30 shadow-2xl shadow-indigo-500/10">
-                    <div class="bg-gradient-to-r from-indigo-600 to-indigo-800 p-6 flex items-center gap-4">
-                        <div class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center text-2xl">🤖</div>
-                        <div>
-                            <h3 class="font-black text-lg">Pure AI Agent</h3>
-                            <p class="text-[10px] text-indigo-200">متصل وجاهز للمساعدة</p>
-                        </div>
-                    </div>
-                    <div id="chatBox" class="flex-1 p-6 overflow-y-auto space-y-4 bg-slate-900/50 scrollbar-hide">
-                        <div class="flex gap-3">
-                            <div class="text-2xl">🤖</div>
-                            <div class="bg-slate-800 p-4 rounded-2xl rounded-tr-none max-w-[80%] text-sm border border-slate-700">
-                                أهلاً بك في منصة بيور برو! يمكنك سؤالي عن أرشيفك، أو طلب إرشادات حول قراءة الفواتير. جرب كتابة "كيف أطبع؟".
-                            </div>
-                        </div>
-                    </div>
-                    <div class="p-4 bg-slate-800 flex gap-2 border-t border-slate-700">
-                        <input type="text" id="botInput" placeholder="اكتب سؤالك هنا..." class="flex-1 bg-slate-900 border border-slate-700 rounded-xl p-4 text-sm outline-none focus:border-indigo-500 text-white transition-all" onkeypress="if(event.key === 'Enter') askBot()">
-                        <button onclick="askBot()" class="bg-indigo-600 hover:bg-indigo-500 px-6 rounded-xl font-bold transition-all shadow-lg shadow-indigo-600/30">إرسال</button>
-                    </div>
-                </div>
-            </section>
-
+        <h1>شركة الزعيم اكسبرس للتوصيل السريع</h1>
+        <p>لتتبع الطرود و الشحنات و معرفة حالة الطلب</p>
+        
+        <div class="search-box">
+            <input type="text" id="trackingInput" placeholder="ادخل رقم التتبع هنا...">
+            <button onclick="searchParcel()">بحث</button>
         </div>
-    </main>
-
-    <div id="toast-container"></div>
+    </div>
 
     <script>
-        // إعداد التاريخ
-        const todayStr = new Date().toLocaleDateString('en-GB');
-        document.getElementById('currentDateNav').innerText = todayStr;
-        document.getElementById('matchDateOut').innerText = todayStr;
-
-        // نظام التنقل
-        function showScreen(screenId) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active-link'));
+        function searchParcel() {
+            // جلب القيمة التي أدخلها المستخدم
+            const trackingNumber = document.getElementById('trackingInput').value;
             
-            document.getElementById('screen-' + screenId).classList.add('active');
-            document.getElementById('btn-' + screenId).classList.add('active-link');
-            
-            if(screenId === 'archive') loadArchive();
-        }
-
-        // نظام الإشعارات (Toast)
-        function showToast(message, type = 'success') {
-            const container = document.getElementById('toast-container');
-            const toast = document.createElement('div');
-            toast.className = 'toast';
-            toast.style.borderRightColor = type === 'success' ? '#10b981' : '#ef4444';
-            toast.innerHTML = message;
-            container.appendChild(toast);
-            setTimeout(() => {
-                toast.style.transform = 'translateX(-100%)';
-                toast.style.opacity = '0';
-                setTimeout(() => toast.remove(), 300);
-            }, 3000);
-        }
-
-        // إعداد الرسم البياني (Chart.js)
-        const ctx = document.getElementById('mainChart').getContext('2d');
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: ['السبت', 'الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس'],
-                datasets: [{
-                    label: 'التحصيلات (مليون دينار)',
-                    data: [12, 19, 15, 25, 22, 30],
-                    borderColor: '#6366f1',
-                    backgroundColor: 'rgba(99, 102, 241, 0.2)',
-                    borderWidth: 3,
-                    tension: 0.4,
-                    fill: true
-                }]
-            },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { grid: { color: 'rgba(255,255,255,0.05)' } }, x: { grid: { display: false } } } }
-        });
-
-        // دالة التفقيط
-        function tafgeet(amount) {
-            if (amount === 0) return "صفر دينار عراقي";
-            return "فقط " + Number(amount).toLocaleString('ar-IQ') + " دينار عراقي لا غير";
-        }
-
-        // معالجة PDF
-        let currentMatchTotal = 0;
-        document.getElementById('pdfFile').onchange = async (e) => {
-            const file = e.target.files[0]; if (!file) return;
-            showToast('جاري تحليل كشف الحساب...');
-            
-            const pdfJS = window['pdfjs-dist/build/pdf'];
-            pdfJS.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
-            const pdf = await pdfJS.getDocument({data: await file.arrayBuffer()}).promise;
-            
-            let allBills = [];
-            currentMatchTotal = 0;
-
-            for (let i = 1; i <= pdf.numPages; i++) {
-                const page = await pdf.getPage(i);
-                const text = await page.getTextContent();
-                const items = text.items;
-
-                let client = items.map(it => it.str).find(t => t.includes("مذخر") || t.includes("صيدلية")) || "";
-                if(client) document.getElementById('clientNameInput').value = client;
-
-                items.forEach(item => {
-                    if (/\d{2}\/\d{2}\/\d{4}/.test(item.str)) {
-                        let y = item.transform[5];
-                        let row = items.filter(it => Math.abs(it.transform[5] - y) < 5);
-                        const nums = row.filter(r => /[\d,]+\.\d{2}/.test(r.str));
-                        if(nums.length >= 2) {
-                            let amount = parseFloat(nums[nums.length-1].str.replace(/,/g,''));
-                            currentMatchTotal += amount;
-                            allBills.push({ id: Math.floor(Math.random()*10000), date: item.str, amount: amount });
-                        }
-                    }
-                });
+            // التحقق مما إذا كان الحقل فارغاً
+            if(trackingNumber.trim() === '') {
+                alert('الرجاء إدخال رقم التتبع أولاً!');
+            } else {
+                // محاكاة عملية الاتصال بقاعدة البيانات
+                alert('جاري البحث عن حالة الشحنة رقم: ' + trackingNumber + '\n\n(هنا سيتم ربط الكود بقاعدة البيانات لاحقاً لإظهار النتيجة الحقيقية)');
             }
-
-            const area = document.getElementById('billsArea');
-            area.innerHTML = '';
-            allBills.forEach(b => {
-                area.innerHTML += `<div class="bg-white border border-slate-200 p-3 rounded-xl flex justify-between items-center shadow-sm">
-                    <span class="font-mono font-black text-slate-800 text-lg">${b.amount.toLocaleString()} IQD</span>
-                    <div class="text-left border-l border-slate-200 pl-3">
-                        <span class="block text-[10px] font-bold text-slate-400">#INV-${b.id}</span>
-                        <span class="text-[9px] font-bold text-slate-500">${b.date}</span>
-                    </div>
-                </div>`;
-            });
-
-            document.getElementById('finalTotalOut').innerText = currentMatchTotal.toLocaleString() + " IQD";
-            document.getElementById('tafgeetOut').innerText = tafgeet(currentMatchTotal);
-            
-            showToast('تم استخراج الفواتير بنجاح!');
-        };
-
-        // نظام الأرشيف (Local Storage)
-        function saveCurrentMatch() {
-            const client = document.getElementById('clientNameInput').value;
-            if(!client || currentMatchTotal === 0) { showToast('لا توجد بيانات مطابقة لحفظها!', 'error'); return; }
-            
-            let archive = JSON.parse(localStorage.getItem('pure_archive')) || [];
-            archive.push({ date: todayStr, client: client, amount: currentMatchTotal, status: 'مكتمل' });
-            localStorage.setItem('pure_archive', JSON.stringify(archive));
-            
-            showToast('تم حفظ المطابقة في الأرشيف بنجاح 💾');
-        }
-
-        function loadArchive() {
-            const archive = JSON.parse(localStorage.getItem('pure_archive')) || [];
-            const tbody = document.getElementById('archiveTableBody');
-            tbody.innerHTML = '';
-            if(archive.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" class="text-center py-6 text-slate-500">الأرشيف فارغ حالياً</td></tr>`;
-                return;
-            }
-            archive.reverse().forEach(record => {
-                tbody.innerHTML += `
-                    <tr class="border-b border-slate-700/50 hover:bg-slate-800/50 transition-all">
-                        <td class="py-4 px-4 font-mono text-xs">${record.date}</td>
-                        <td class="py-4 px-4 text-indigo-300">${record.client}</td>
-                        <td class="py-4 px-4 font-mono">${record.amount.toLocaleString()} IQD</td>
-                        <td class="py-4 px-4 text-center"><span class="bg-emerald-500/20 text-emerald-400 text-[10px] px-2 py-1 rounded-md border border-emerald-500/30">${record.status}</span></td>
-                    </tr>`;
-            });
-        }
-
-        function clearArchive() {
-            if(confirm('هل أنت متأكد من مسح جميع سجلات الأرشيف؟ لا يمكن التراجع عن هذا الإجراء.')){
-                localStorage.removeItem('pure_archive');
-                loadArchive();
-                showToast('تم مسح الأرشيف', 'error');
-            }
-        }
-
-        // المساعد الذكي
-        function askBot() {
-            const input = document.getElementById('botInput');
-            const chatBox = document.getElementById('chatBox');
-            const text = input.value.trim();
-            if (!text) return;
-
-            chatBox.innerHTML += `<div class="flex justify-end gap-3"><div class="bg-indigo-600 p-4 rounded-2xl rounded-tl-none max-w-[80%] text-sm shadow-lg">${text}</div><div class="text-2xl mt-2">👤</div></div>`;
-            input.value = "";
-            chatBox.scrollTop = chatBox.scrollHeight;
-
-            let response = "علم! تم تسجيل استفسارك. النظام مصمم ليكون بديهياً، هل تواجه مشكلة مع كشف معين؟";
-            if(text.includes("طبع") || text.includes("طباعة")) response = "للطباعة، انتقل لشاشة 'المطابقة الذكية' واضغط على زر 'طباعة' ذو اللون الأخضر أو اضغط `Ctrl+P`. ستختفي كل القوائم وتطبع الورقة الرسمية فقط.";
-            if(text.includes("ارشف") || text.includes("حفظ")) response = "تأكد من إدخال اسم العميل ورفع الـ PDF، ثم اضغط 'حفظ في الأرشيف' ليتسنى لك مراجعته لاحقاً في قسم الأرشيف.";
-
-            setTimeout(() => {
-                chatBox.innerHTML += `<div class="flex gap-3"><div class="text-2xl mt-2">🤖</div><div class="bg-slate-800 border border-slate-700 p-4 rounded-2xl rounded-tr-none max-w-[80%] text-sm shadow-lg">${response}</div></div>`;
-                chatBox.scrollTop = chatBox.scrollHeight;
-            }, 800);
         }
     </script>
+
 </body>
 </html>
-
